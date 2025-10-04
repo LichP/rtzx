@@ -1,0 +1,16 @@
+[package]
+name = "rtzx"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+binrw = "0.15.0"
+clap = { version = "4.5.48", features = ["derive"] }
+crossterm = "0.29.0"
+figlet-rs = "0.1.5"
+hound = "3.5.1"
+popcnt = "0.1.0"
+ratatui = "0.29.0"
+rodio = { version = "0.21.1", features = ["wav_output"] }
+strum = "0.27.2"
+strum_macros = "0.27.2"
