@@ -5,7 +5,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         DirectWaveform,
@@ -44,26 +44,26 @@ impl Block for DirectRecording {
         return BlockType::TurboSpeedDataBlock;
     }
 
-    fn get_waveforms(&self, machine: Arc<Machine>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+    fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let direct_source = DirectWaveform::new(
-            machine.clone(),
+            config.clone(),
             self.length_sample,
             &self.data,
             self.used_bits,
             start_pulse_high,
         );
-        let pause_source = PauseWaveform::new(self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause);
 
         return vec![Box::new(direct_source), Box::new(pause_source)];
     }
 
-    fn next_block_start_pulse_high(&self, self_start_pulse_high: bool) -> bool {
+    fn next_block_start_pulse_high(&self, config: Arc<Config>, self_start_pulse_high: bool) -> bool {
         if self.pause > 0 {
             return true;
         }
 
         let direct_source = DirectWaveform::new(
-            Arc::new(Machine::ZXSpectrum),
+            config.clone(),
             self.length_sample,
             &self.data,
             self.used_bits,

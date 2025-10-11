@@ -4,17 +4,24 @@ use rodio::{
     Source,
 };
 use std::fmt;
+use std::sync::Arc;
 use std::time::Duration;
 
-use crate::tzx::waveforms::Waveform;
+use crate::tzx::{
+    Config,
+    waveforms::Waveform,
+};
 
 #[derive(Clone)]
 pub struct EmptyWaveform {
+    config: Arc<Config>,
 }
 
 impl EmptyWaveform {
-    pub fn new() -> Self {
-        return Self {}
+    pub fn new(config: Arc<Config>) -> Self {
+        return Self {
+            config,
+        }
     }
 }
 
@@ -28,7 +35,7 @@ impl Iterator for EmptyWaveform {
 
 impl Source for EmptyWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
     fn total_duration(&self) -> Option<Duration> { None }
 }

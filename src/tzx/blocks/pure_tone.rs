@@ -5,7 +5,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         PilotWaveform,
@@ -35,9 +35,9 @@ impl Block for PureTone {
         return BlockType::PureTone;
     }
 
-    fn get_waveforms(&self, machine: Arc<Machine>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+    fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let pilot_source = PilotWaveform::new(
-            machine.clone(),
+            config.clone(),
             self.length_pulse,
             self.length_tone,
             start_pulse_high,
@@ -46,7 +46,7 @@ impl Block for PureTone {
         return vec![Box::new(pilot_source)];
     }
 
-    fn next_block_start_pulse_high(&self, self_start_pulse_high: bool) -> bool {
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, self_start_pulse_high: bool) -> bool {
         return if self.length_tone % 2 == 0 { self_start_pulse_high } else { !self_start_pulse_high };
     }
 

@@ -1,11 +1,8 @@
 use clap::Parser;
 use std::fs::File;
 use std::io;
-use std::path::Path;
 
-use crate::tzx::{
-    Machine, TzxData,
-};
+use crate::tzx::TzxData;
 use crate::ui::commands::{
     Commands,
     convert::run_convert,
@@ -28,26 +25,23 @@ fn main() -> io::Result<()> {
     let cli = Cli::parse();
 
     // Create a path to the desired file
-    let file_name = &cli.command.as_ref().and_then(|cmd| cmd.file_name());
-    let path = Path::new(file_name.expect("File name not supplied"));
-    let display = path.display();
+    let file_name = &cli.command.as_ref().and_then(|cmd| cmd.file_name()).expect("Filename not supplied");
+    let display = file_name.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
-    let file = match File::open(&path) {
+    let file = match File::open(file_name) {
         Err(why) => panic!("Couldn't open {}: {}", display, why),
         Ok(file) => file,
     };
 
-    let machine = match &cli.command.as_ref().and_then(|cmd| cmd.machine()) {
-        Some(machine) => machine.clone(),
-        None => Machine::from_path(path).expect("Unable to determine machine type from path"),
-    };
+    let config = &cli.command.as_ref().and_then(|cmd| Some(cmd.config())).unwrap();
+
     let tzx_data = TzxData::parse_from(file);
 
     return match &cli.command {
-        Some(Commands::Inspect(_)) => run_inspect(path, &machine, &tzx_data),
-        Some(Commands::Convert(args)) => run_convert(&args, &machine, &tzx_data),
-        Some(Commands::Play(_)) => run_play(path, &machine, &tzx_data),
+        Some(Commands::Inspect(_)) => run_inspect(file_name, &config, &tzx_data),
+        Some(Commands::Convert(args)) => run_convert(&args, &config, &tzx_data),
+        Some(Commands::Play(_)) => run_play(file_name, &config, &tzx_data),
         None => Ok(()),
     };
 }

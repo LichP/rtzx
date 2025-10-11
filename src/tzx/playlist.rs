@@ -3,14 +3,14 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::Block,
     waveforms::Waveform,
 };
 
 pub struct Playlist {
+    config: Arc<Config>,
     sink: Sink,
-    machine: Arc<Machine>,
     pub blocks: Vec<Box<dyn Block>>,
     pub block_durations: Vec<std::time::Duration>,
     pub waveforms: Vec<Box<dyn Waveform + Send>>,
@@ -19,17 +19,17 @@ pub struct Playlist {
     pub current_block_index: usize,
     pub current_waveform_index: usize,
     start_time: Option<Instant>,
-    paused_time: Duration,
+    playback_duration: Duration,
     is_paused: bool,
 }
 
 impl Playlist {
-    pub fn new(sink: Sink, machine: Machine) -> Playlist {
+    pub fn new(sink: Sink, config: Arc<Config>) -> Playlist {
         sink.pause();
 
         return Playlist {
+            config,
             sink,
-            machine: Arc::new(machine),
             blocks: vec![],
             block_durations: vec![],
             waveforms: vec![],
@@ -38,14 +38,14 @@ impl Playlist {
             current_block_index: 0,
             current_waveform_index: 0,
             start_time: None,
-            paused_time: Duration::ZERO,
+            playback_duration: Duration::ZERO,
             is_paused: true,
         }
     }
 
     pub fn append_block(&mut self, block: &Box<dyn Block>, start_pulse_high: bool) {
         let mut block_duration = Duration::ZERO;
-        let waveforms = block.get_waveforms(self.machine.clone(), start_pulse_high);
+        let waveforms = block.get_waveforms(self.config.clone(), start_pulse_high);
 
         for waveform in waveforms {
             let source: Box<dyn Source + Send> = waveform.clone();
@@ -67,9 +67,9 @@ impl Playlist {
     pub fn elapsed(&self) -> Duration {
         if let Some(start) = self.start_time {
             if self.is_paused {
-                self.paused_time
+                self.playback_duration
             } else {
-                self.paused_time + start.elapsed()
+                self.playback_duration + start.elapsed()
             }
         } else {
             Duration::ZERO
@@ -132,7 +132,7 @@ impl Playlist {
         if !self.is_paused {
             self.sink.pause();
             if let Some(start) = self.start_time {
-                self.paused_time += start.elapsed();
+                self.playback_duration += start.elapsed();
             }
             self.is_paused = true;
         }
@@ -140,8 +140,12 @@ impl Playlist {
 
     pub fn play(&mut self) {
         if self.is_paused {
+            if self.start_time.is_some() {
+                let (waveform_playback_duration, _) = self.progress_in_current_waveform();
+                let _ = self.sink.try_seek(waveform_playback_duration);
+            }
             self.sink.play();
-            self.start_time = Some(Instant::now());
+            self.start_time = Instant::now().checked_add(self.config.buffer_delay());
             self.is_paused = false;
         }
     }

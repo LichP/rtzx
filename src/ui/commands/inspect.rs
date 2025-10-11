@@ -2,13 +2,13 @@ use std::io;
 use std::path::Path;
 
 use crate::tzx::{
-    Machine,
+    Config,
     TzxData,
 };
 
-pub fn run_inspect(path: &Path, machine: &Machine, tzx_data: &TzxData) -> io::Result<()> {
+pub fn run_inspect(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<()> {
     println!("TZX file: {}", path.display());
-    println!("Machine:  {:?}", machine);
+    println!("Platform:  {:?}", config.platform);
     println!("Header:   {}", tzx_data.header);
 
     for (index, block) in tzx_data.blocks.iter().enumerate() {

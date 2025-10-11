@@ -9,13 +9,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::tzx::{
-    Machine,
+    Config,
     waveforms::{Pulse, Waveform},
 };
 
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct PilotWaveform {
+    config: Arc<Config>,
     length_pulse: u16,
     length_tone: u16,
     current_pulse_index: usize,
@@ -23,15 +24,16 @@ pub struct PilotWaveform {
 }
 
 impl PilotWaveform {
-    pub fn new(machine: Arc<Machine>, length_pulse: u16, length_tone: u16, start_pulse_high: bool) -> Self {
+    pub fn new(config: Arc<Config>, length_pulse: u16, length_tone: u16, start_pulse_high: bool) -> Self {
         let mut current_pulse_high = start_pulse_high;
         let mut pulses: Vec<Pulse> = vec![];
         for _ in 0..length_tone {
-            pulses.push(Pulse::new(machine.clone(), length_pulse, current_pulse_high));
+            pulses.push(Pulse::new(config.clone(), length_pulse, current_pulse_high));
             current_pulse_high = !current_pulse_high;
         }
 
         return Self {
+            config,
             length_pulse,
             length_tone,
             current_pulse_index: 0,
@@ -60,18 +62,18 @@ impl Iterator for PilotWaveform {
 }
 impl Source for PilotWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
 
     fn total_duration(&self) -> Option<Duration> {
         if self.pulses.len() == 0 {
             return None;
         }
-        return Some(Duration::from_secs_f64(self.pulses[0].len() as f64 * self.pulses.len() as f64 / 48000.0));
+        return Some(self.pulses[0].duration() * self.pulses.len() as u32);
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        let samples = pos.as_millis() * 48;
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u128;
         let mut pulse_samples = 0;
         self.current_pulse_index = 0;
         while pulse_samples < samples && self.current_pulse_index < self.pulses.len() {

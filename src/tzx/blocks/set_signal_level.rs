@@ -2,8 +2,12 @@ use binrw::{
     binrw,
 };
 use std::fmt;
-use crate::tzx::blocks::Block;
-use crate::tzx::blocks::BlockType;
+use std::sync::Arc;
+
+use crate::tzx::{
+    Config,
+    blocks::{Block, BlockType}
+};
 
 #[binrw]
 #[brw(little)]
@@ -24,7 +28,7 @@ impl Block for SetSignalLevel {
         return BlockType::SetSignalLevel;
     }
 
-    fn next_block_start_pulse_high(&self, _self_start_pulse_high: bool) -> bool { self.signal_level != 0 }
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, _self_start_pulse_high: bool) -> bool { self.signal_level != 0 }
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())

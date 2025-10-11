@@ -9,31 +9,33 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::tzx::{
-    Machine,
+    Config,
     waveforms::{Pulse, Waveform},
 };
 
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct PulseSequenceWaveform {
+    config: Arc<Config>,
     total_length: usize,
     current_pulse_index: usize,
     pulses: Vec<Pulse>,
 }
 
 impl PulseSequenceWaveform {
-    pub fn new(machine: Arc<Machine>, pulse_lengths: &Vec<u16>,  start_pulse_high: bool) -> Self {
+    pub fn new(config: Arc<Config>, pulse_lengths: &Vec<u16>,  start_pulse_high: bool) -> Self {
         let mut current_pulse_high = start_pulse_high;
         let mut pulses: Vec<Pulse> = vec![];
         let mut total_length: usize = 0;
 
         for pulse_length in pulse_lengths {
-            pulses.push(Pulse::new(machine.clone(), *pulse_length, current_pulse_high));
+            pulses.push(Pulse::new(config.clone(), *pulse_length, current_pulse_high));
             total_length += *pulse_length as usize;
             current_pulse_high = !current_pulse_high;
         }
 
         return Self {
+            config,
             total_length,
             current_pulse_index: 0,
             pulses: pulses,
@@ -62,7 +64,7 @@ impl Iterator for PulseSequenceWaveform {
 
 impl Source for PulseSequenceWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -74,7 +76,7 @@ impl Source for PulseSequenceWaveform {
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        let samples = pos.as_millis() * 48;
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u128;
         let mut pulse_samples = 0;
         self.current_pulse_index = 0;
         while pulse_samples < samples && self.current_pulse_index < self.pulses.len() {

@@ -5,7 +5,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         DataWaveform,
@@ -38,29 +38,29 @@ impl Block for StandardSpeedDataBlock {
         return BlockType::StandardSpeedDataBlock;
     }
 
-    fn get_waveforms(&self, machine: Arc<Machine>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+    fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let header = self.data[0] < 128;
         let pilot_source = PilotWaveform::new(
-            machine.clone(),
+            config.clone(),
             2168,
             if header { 8063 } else { 3223 },
             start_pulse_high,
         );
         let sync_pulses_source = SyncWaveform::new(
-            machine.clone(),
+            config.clone(),
             667,
             735,
             start_pulse_high,
         );
         let data_source = DataWaveform::new(
-            machine.clone(),
+            config.clone(),
             855,
             1710,
             &self.data,
             8,
             start_pulse_high,
         );
-        let pause_source = PauseWaveform::new(self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause);
 
         return vec![Box::new(pilot_source), Box::new(sync_pulses_source), Box::new(data_source), Box::new(pause_source)];
     }

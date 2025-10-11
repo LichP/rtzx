@@ -5,7 +5,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         DataWaveform,
@@ -56,21 +56,21 @@ impl Block for TurboSpeedDataBlock {
         return BlockType::TurboSpeedDataBlock;
     }
 
-    fn get_waveforms(&self, machine: Arc<Machine>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+    fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let pilot_source = PilotWaveform::new(
-            machine.clone(),
+            config.clone(),
             self.length_pulse_pilot,
             self.length_tone_pilot,
             start_pulse_high,
         );
         let sync_pulses_source = SyncWaveform::new(
-            machine.clone(),
+            config.clone(),
             self.length_pulse_sync_first,
             self.length_pulse_sync_second,
             if self.length_tone_pilot % 2 == 0 { start_pulse_high } else { !start_pulse_high },
         );
         let data_source = DataWaveform::new(
-            machine.clone(),
+            config.clone(),
             self.length_pulse_zero,
             self.length_pulse_one,
             &self.data,
@@ -79,12 +79,12 @@ impl Block for TurboSpeedDataBlock {
         );
         // let pause_source = PauseWaveform::new(if self.pause == 3076 { 5000 } else { self.pause });
         //let pause_source = PauseWaveform::new(if self.pause == 12918 { 23000 } else { self.pause });
-        let pause_source = PauseWaveform::new(self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause);
 
         return vec![Box::new(pilot_source), Box::new(sync_pulses_source), Box::new(data_source), Box::new(pause_source)];
     }
 
-    fn next_block_start_pulse_high(&self, self_start_pulse_high: bool) -> bool {
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, self_start_pulse_high: bool) -> bool {
         if self.pause > 0 {
             return true;
         }

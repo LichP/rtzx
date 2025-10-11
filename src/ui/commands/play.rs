@@ -1,3 +1,5 @@
+use cpal::traits::HostTrait;
+use cpal::{BufferSize, SampleFormat};
 use crossterm::{
     event::{self, Event, KeyCode},
     execute,
@@ -16,11 +18,12 @@ use ratatui::{
 };
 use std::io;
 use std::path::Path;
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
 use crate::tzx::{
-    Machine, Playlist, TzxData,
+    Config, Playlist, TzxData,
 };
 
 fn format_duration(duration: Duration) -> String {
@@ -32,7 +35,22 @@ fn format_duration(duration: Duration) -> String {
     format!("{:2}m {:02}s {:03}ms", minutes, seconds, milliseconds)
 }
 
-pub fn run_play(path: &Path, machine: &Machine, tzx_data: &TzxData) -> io::Result<()> {
+pub fn run_play(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<()> {
+    let default_device = cpal::default_host()
+        .default_output_device()
+        .expect("No default audio output device is found.");
+    #[allow(unused_mut)]
+    let mut stream_handle = rodio::OutputStreamBuilder::from_device(default_device)
+        .expect("Unable to open audio device")
+        .with_buffer_size(BufferSize::Fixed(config.buffer_size))
+        .with_sample_rate(config.sample_rate)
+        .with_sample_format(SampleFormat::F32)
+        .open_stream()
+        .expect("Unable to configure audio device");
+    #[cfg(not(debug_assertions))]
+    stream_handle.log_on_drop(false);
+    let sink = rodio::Sink::connect_new(&stream_handle.mixer());
+
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, cursor::Hide)?;
@@ -48,30 +66,21 @@ pub fn run_play(path: &Path, machine: &Machine, tzx_data: &TzxData) -> io::Resul
     })?;
 
     let metadata_text = vec![
-        Line::from(vec!["TZX file: ".into(), format!("{}", path.display()).bold()]),
-        Line::from(vec!["Machine:  ".into(), format!("{:?}", machine).bold()]),
-        Line::from(vec!["Header:   ".into(), format!("{}", tzx_data.header).bold()]),
+        Line::from(vec!["TZX file:    ".into(), format!("{}", path.display()).bold()]),
+        Line::from(vec!["Platform:    ".into(), format!("{:?}", config.platform).bold()]),
+        Line::from(vec!["Header:      ".into(), format!("{}", tzx_data.header).bold()]),
+        Line::from(vec!["Sample rate: ".into(), format!("{:?}", config.sample_rate).bold()]),
     ];
-    terminal.insert_before(4, |buf| {
+    terminal.insert_before(5, |buf| {
         Paragraph::new(metadata_text).render(buf.area, buf);
     })?;
 
-    #[cfg(debug_assertions)]
-    let stream_handle = rodio::OutputStreamBuilder::open_default_stream()
-        .expect("open default audio stream");
-
-    #[cfg(not(debug_assertions))]
-    let mut stream_handle = rodio::OutputStreamBuilder::open_default_stream()
-        .expect("open default audio stream");
-    #[cfg(not(debug_assertions))]
-    stream_handle.log_on_drop(false);
-    let sink = rodio::Sink::connect_new(&stream_handle.mixer());
-
     let mut start_pulse_high = true;
-    let mut playlist = Playlist::new(sink, machine.clone());
+    let config = Arc::new(config.clone());
+    let mut playlist = Playlist::new(sink, config.clone());
     for block in &tzx_data.blocks {
         playlist.append_block(block, start_pulse_high);
-        start_pulse_high = block.next_block_start_pulse_high(start_pulse_high);
+        start_pulse_high = block.next_block_start_pulse_high(config.clone(), start_pulse_high);
     }
 
     let mut last_block_index: usize = 0;

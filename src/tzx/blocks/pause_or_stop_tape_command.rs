@@ -5,7 +5,7 @@ use std::fmt;
 use::std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         PauseWaveform,
@@ -31,8 +31,8 @@ impl Block for PauseOrStopTapeCommand {
         return BlockType::PauseOrStopTapeCommand;
     }
 
-    fn get_waveforms(&self, _machine: Arc<Machine>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
-        let pause_source = PauseWaveform::new(self.pause);
+    fn get_waveforms(&self, config: Arc<Config>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+        let pause_source = PauseWaveform::new(config, self.pause);
         return vec![Box::new(pause_source)];
     }
 

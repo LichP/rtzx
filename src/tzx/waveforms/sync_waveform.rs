@@ -8,13 +8,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use crate::tzx::{
-    Machine,
+    Config,
     waveforms::{Pulse, Waveform},
 };
 
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct SyncWaveform {
+    config: Arc<Config>,
     length_pulse_sync_first: u16,
     length_pulse_sync_second: u16,
     is_first_pulse: bool,
@@ -23,13 +24,14 @@ pub struct SyncWaveform {
 }
 
 impl SyncWaveform {
-    pub fn new(machine: Arc<Machine>, length_pulse_sync_first: u16, length_pulse_sync_second: u16, start_pulse_high: bool) -> Self {
+    pub fn new(config: Arc<Config>, length_pulse_sync_first: u16, length_pulse_sync_second: u16, start_pulse_high: bool) -> Self {
         return Self {
+            config: config.clone(),
             length_pulse_sync_first,
             length_pulse_sync_second,
             is_first_pulse: true,
-            pulse_first: Pulse::new(machine.clone(), length_pulse_sync_first, start_pulse_high),
-            pulse_second: Pulse::new(machine.clone(), length_pulse_sync_second, !start_pulse_high),
+            pulse_first: Pulse::new(config.clone(), length_pulse_sync_first, start_pulse_high),
+            pulse_second: Pulse::new(config.clone(), length_pulse_sync_second, !start_pulse_high),
         }
     }
 }
@@ -52,7 +54,7 @@ impl Iterator for SyncWaveform {
 
 impl Source for SyncWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
 
     fn total_duration(&self) -> Option<Duration> {

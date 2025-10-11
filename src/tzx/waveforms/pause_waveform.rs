@@ -5,24 +5,34 @@ use rodio::{
     source::SeekError,
 };
 use std::fmt;
+use std::sync::Arc;
 use std::time::Duration;
 
-use crate::tzx::waveforms::Waveform;
+use crate::tzx::{
+    Config,
+    waveforms::Waveform,
+};
 
 #[derive(Clone)]
 pub struct PauseWaveform {
+    config: Arc<Config>,
     length: u16,
     sample_index: u64,
     start_pause_pulse: bool,
 }
 
 impl PauseWaveform {
-    pub fn new(length: u16) -> Self {
+    pub fn new(config: Arc<Config>, length: u16) -> Self {
         return Self {
+            config,
             length,
             sample_index: 0,
             start_pause_pulse: true,
         }
+    }
+
+    pub fn len(&self) -> u64 {
+        (self.length as f64 * self.config.sample_rate as f64 / 1000.0).round() as u64
     }
 }
 
@@ -37,7 +47,7 @@ impl Iterator for PauseWaveform {
             if self.sample_index == 0 {
                 self.sample_index += 1;
                 return Some(0.0f32);
-            } else if self.sample_index < 48 {
+            } else if self.sample_index < (self.config.sample_rate as f64 / 1000.0).round() as u64 {
                 self.sample_index += 1;
                 return Some(-1.0f32);
             }
@@ -45,9 +55,8 @@ impl Iterator for PauseWaveform {
             self.start_pause_pulse = false;
             //self.sample_index = 0;
         }
-        let pause_length = self.length as u64 * 48;
 
-        if self.sample_index < pause_length {
+        if self.sample_index < self.len() {
             self.sample_index += 1;
             return Some(0f32);
         }
@@ -57,7 +66,7 @@ impl Iterator for PauseWaveform {
 
 impl Source for PauseWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -65,7 +74,11 @@ impl Source for PauseWaveform {
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        self.sample_index = if pos.as_millis() < self.length as u128 { pos.as_millis() as u64 * 48 } else { self.length as u64 * 48 - 1 };
+        self.sample_index = if pos.as_millis() < self.length as u128 {
+            (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u64
+        } else {
+            self.len() - 1
+        };
         return Ok(());
     }
 }
@@ -80,7 +93,7 @@ impl fmt::Display for PauseWaveform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "PauseWaveform:  {:6} / {:6} samples",
             self.sample_index,
-            self.length as u64 * 48,
+            self.len(),
         )
     }
 }

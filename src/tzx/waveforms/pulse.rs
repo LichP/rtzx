@@ -1,20 +1,20 @@
 use std::sync::Arc;
 use std::time::Duration;
 
-use crate::tzx::Machine;
+use crate::tzx::Config;
 
 #[derive(Clone)]
 pub struct Pulse {
-    pub machine: Arc<Machine>,
+    pub config: Arc<Config>,
     pub length: u16,
     pub high: bool,
     index: u32,
 }
 
 impl Pulse {
-    pub fn new(machine: Arc<Machine>, length: u16, high: bool) -> Self {
+    pub fn new(config: Arc<Config>, length: u16, high: bool) -> Self {
         return Self {
-            machine,
+            config,
             length,
             high,
             index: 0,
@@ -22,11 +22,11 @@ impl Pulse {
     }
 
     pub fn len(&self) -> u32 {
-        return (self.length as f64 * self.machine.t_cycle_secs() * 48000.0).round() as u32
+        return (self.length as f64 * self.config.platform.t_cycle_secs() * self.config.sample_rate as f64).round() as u32
     }
 
     pub fn duration(&self) -> Duration {
-        Duration::from_secs_f64(self.len() as f64 / 48000.0)
+        Duration::from_secs_f64(self.len() as f64 / self.config.sample_rate as f64)
     }
 
     pub fn get_sample(&self) -> f32 {

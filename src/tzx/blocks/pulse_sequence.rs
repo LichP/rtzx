@@ -5,7 +5,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use crate::tzx::{
-    Machine,
+    Config,
     blocks::{Block, BlockType},
     waveforms::{
         PulseSequenceWaveform,
@@ -35,9 +35,9 @@ impl Block for PulseSequence {
         return BlockType::PulseSequence;
     }
 
-    fn get_waveforms(&self, machine: Arc<Machine>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+    fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let pulse_sequence_source = PulseSequenceWaveform::new(
-            machine.clone(),
+            config.clone(),
             &self.pulse_lengths,
             start_pulse_high,
         );
@@ -45,7 +45,7 @@ impl Block for PulseSequence {
         return vec![Box::new(pulse_sequence_source)];
     }
 
-    fn next_block_start_pulse_high(&self, self_start_pulse_high: bool) -> bool {
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, self_start_pulse_high: bool) -> bool {
         return if self.length % 2 == 0 { self_start_pulse_high } else { !self_start_pulse_high };
     }
 

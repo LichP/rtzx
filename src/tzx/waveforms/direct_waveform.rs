@@ -9,13 +9,14 @@ use std::fmt;
 use std::time::Duration;
 
 use crate::tzx::{
-    Machine,
+    Config,
     waveforms::{Pulse,Waveform},
 };
 
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct DirectWaveform {
+    config: Arc<Config>,
     length_sample: u16,
     data: Vec<u8>,
     used_bits: u8,
@@ -24,7 +25,7 @@ pub struct DirectWaveform {
 }
 
 impl DirectWaveform {
-    pub fn new(machine: Arc<Machine>, length_sample: u16, data: &Vec<u8>, used_bits: u8, start_pulse_high: bool) -> Self {
+    pub fn new(config: Arc<Config>, length_sample: u16, data: &Vec<u8>, used_bits: u8, start_pulse_high: bool) -> Self {
         let mut pulses: Vec<Pulse> = vec![];
 
         for (index, byte) in data.iter().enumerate() {
@@ -36,12 +37,13 @@ impl DirectWaveform {
                 }
                 let bit_mask: u8 = 1 << (7 - data_bit_index);
                 let current_bit_set = byte & bit_mask == bit_mask;
-                pulses.push(Pulse::new(machine.clone(), length_sample, if current_bit_set { start_pulse_high } else { !start_pulse_high}));
+                pulses.push(Pulse::new(config.clone(), length_sample, if current_bit_set { start_pulse_high } else { !start_pulse_high}));
                 data_bit_index += 1;
             }
         }
 
         return Self {
+            config,
             length_sample,
             data: data.to_owned(),
             used_bits,
@@ -79,7 +81,7 @@ impl Iterator for DirectWaveform {
 
 impl Source for DirectWaveform {
     fn channels(&self) -> ChannelCount { 1 }
-    fn sample_rate(&self) -> SampleRate { 48000 }
+    fn sample_rate(&self) -> SampleRate { self.config.sample_rate }
     fn current_span_len(&self) -> Option<usize> { None }
 
     fn total_duration(&self) -> Option<Duration> {
@@ -91,7 +93,7 @@ impl Source for DirectWaveform {
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        let samples = pos.as_millis() * 48;
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u128;
         let mut pulse_samples = 0;
         self.current_pulse_index = 0;
         while pulse_samples < samples && self.current_pulse_index < self.pulses.len() {

@@ -29,7 +29,7 @@ pub use turbo_speed_data_block::TurboSpeedDataBlock;
 pub use text_description::{TextDescription, MessageBlock};
 
 use crate::tzx::{
-    Machine,
+    Config,
     waveforms::{EmptyWaveform, Waveform}
 };
 
@@ -48,12 +48,12 @@ use std::sync::Arc;
 pub trait Block: std::fmt::Display {
     fn r#type(&self) -> BlockType;
 
-    fn get_waveforms<'a>(&self, _machine: Arc<Machine>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
-        let empty_source = EmptyWaveform::new();
+    fn get_waveforms<'a>(&self, config: Arc<Config>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
+        let empty_source = EmptyWaveform::new(config.clone());
         return vec![Box::new(empty_source)];
     }
 
-    fn next_block_start_pulse_high(&self, self_start_pulse_high: bool) -> bool { self_start_pulse_high }
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, self_start_pulse_high: bool) -> bool { self_start_pulse_high }
 
     fn clone_box(&self) -> Box<dyn Block>;
 }
