@@ -103,6 +103,18 @@ So far all of my testing has been done with a real Amstrad CPC, where I have suc
 
 While I've tested `rtzx` with a handful of TZX files and verified that files parse and Standard Speed Data Blocks generate output, it is completely untested with a real ZX Spectrum, as I don't have access to one of those :-( . Any feedback from ZX Spectrum users would be most welcome!
 
+## Building
+
+`rtzx` is written Rust, so to compile it from source you'll need to [install Rust](https://rust-lang.org/learn/get-started/).
+
+To build you can then run `cargo build` from a checkout of the repo and you'll then get an executable in the `target/debug` folder.
+
+You can also build and run directly with `cargo`, using the `--` argument to make cargo pass the subsequent args to `rtzx`:
+
+```sh
+cargo run -- play path/to/my--cdt-file.cdt
+```
+
 ## Contact and Contributing
 
 `rtzx` is brand new and will have bugs, so please do open an issue if you encounter any problems with it! For playback issues I'm particularly interested in and TZX / CDT files that are known to work when using other software.
