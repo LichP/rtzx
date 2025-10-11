@@ -128,7 +128,7 @@ pub fn run_play(path: &Path, machine: &Machine, tzx_data: &TzxData) -> io::Resul
                     "W: ".into(), format!("{:10}  / {:10}   ", format_duration(waveform_elapsed), format_duration(waveform_duration.saturating_sub(waveform_elapsed))).yellow(),
                     "B: ".into(), format!("{:10}  / {:10}   ", format_duration(block_elapsed), format_duration(block_duration.saturating_sub(block_elapsed))).yellow(),
                     "T: ".into(), format!("{:10}  / {:10}   ", format_duration(playlist.elapsed()), format_duration(playlist.total_duration.saturating_sub(playlist.elapsed()))).yellow(),
-                    if playlist.is_paused() { "**PAUSED **".bold() } else { "".into() }
+                    if playlist.is_paused() { "** PAUSED **".bold() } else { "".into() }
                 ]),
             ];
 
@@ -141,10 +141,12 @@ pub fn run_play(path: &Path, machine: &Machine, tzx_data: &TzxData) -> io::Resul
                     break;
                 }
 
-                match key.code {
-                    KeyCode::Char('q') => break,
-                    KeyCode::Char(' ') => playlist.toggle_pause(),
-                    _ => (),
+                if key.is_press() {
+                    match key.code {
+                        KeyCode::Char('q') => break,
+                        KeyCode::Char(' ') => playlist.toggle_pause(),
+                        _ => (),
+                    }
                 }
             }
         }
