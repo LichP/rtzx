@@ -45,7 +45,7 @@ pub fn run_play(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<
         .with_buffer_size(BufferSize::Fixed(config.buffer_size))
         .with_sample_rate(config.sample_rate)
         .with_sample_format(SampleFormat::F32)
-        .open_stream()
+        .open_stream_or_fallback()
         .expect("Unable to configure audio device");
     #[cfg(not(debug_assertions))]
     stream_handle.log_on_drop(false);
