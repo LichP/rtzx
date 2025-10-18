@@ -36,7 +36,9 @@ pub enum BlockType {
     EmulationInfo = 0x34,
     CustomInfoBlock = 0x35,
     SnapshotBlock = 0x40,
+    InstructionsBlock = 0x49,
     GlueBlock = 0x5a,
+    Undefined = 0xff,
 }
 
 impl fmt::LowerHex for BlockType {
