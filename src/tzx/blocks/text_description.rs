@@ -44,7 +44,7 @@ pub struct MessageBlock {
 impl fmt::Display for MessageBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let description = String::from_utf8_lossy(&self.text);
-        write!(f, "MessageBlock: {}", description)
+        write!(f, "MessageBlock: {} ({}s)", description, self.display_for_secs)
     }
 }
 

@@ -14,7 +14,10 @@ use crate::tzx::{
 #[derive(Clone)]
 pub struct SetSignalLevel {
     pub length: u32,
+    #[br(if(length != 0, 1))]
     signal_level: u8,
+    #[br(count = if length > 0 { length - 1 } else { 0 })]
+    payload: Vec<u8>,
 }
 
 impl fmt::Display for SetSignalLevel {

@@ -45,6 +45,9 @@ impl Block for PauseOrStopTapeCommand {
 #[brw(little)]
 #[derive(Clone)]
 pub struct StopTapeIf48K {
+    pub length: u32,
+    #[br(count = length)]
+    pub payload: Vec<u8>
 }
 
 impl fmt::Display for StopTapeIf48K {
