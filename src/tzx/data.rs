@@ -11,6 +11,7 @@ use std::io::{
 
 use crate::tzx::{
     Header,
+    RecoveryEnum,
 };
 use crate::tzx::blocks::{
     read_block,
@@ -33,7 +34,7 @@ impl TzxData {
         let mut blocks: Vec<Box<dyn Block + 'static>> = Vec::new();
 
         'parse_blocks: loop {
-            let block_type_result = BlockType::read(&mut reader);
+            let block_type_result = RecoveryEnum::<BlockType, u8>::read_le(&mut reader);
             if block_type_result.is_err() {
                 match block_type_result.unwrap_err() {
                     Error::Io(why) => match why.kind() {
@@ -48,15 +49,27 @@ impl TzxData {
                     break 'parse_blocks;
                 };
             }
+            let block_type_recoverable = block_type_result.unwrap();
 
-            let block_type = block_type_result.unwrap();
-            let block_result: Result<Box<dyn Block>, Error> = read_block(block_type, &mut reader);
-            let block: Box<dyn Block> = match block_result {
-                Err(why ) => { eprintln!("Failed to parse {}: {}", block_type, why); continue },
-                Ok(block) => block,
+            let block_result: Result<Box<dyn Block>, Error> = read_block(block_type_recoverable, &mut reader);
+            let block = match block_result {
+                Err(why) => {
+                    match block_type_recoverable {
+                        RecoveryEnum::Known(block_type) => {
+                            eprintln!("Failed to parse {} after block {}: {}", block_type, blocks.len(), why);
+                        }
+                        RecoveryEnum::Unknown(block_type_id) => {
+                            eprintln!("Failed to parse undefined block type {} after block {}: {}", block_type_id, blocks.len(), why);
+                        }
+                    }
+                    None
+                },
+                Ok(block) => Some(block),
             };
 
-            blocks.push(block);
+            if block.is_none() { continue }
+
+            blocks.push(block.unwrap());
         }
 
         return TzxData {
