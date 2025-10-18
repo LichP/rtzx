@@ -24,6 +24,7 @@ use std::time::Duration;
 
 use crate::tzx::{
     Config, Playlist, TzxData,
+    blocks::BlockExtendedDisplayCollector,
 };
 
 fn format_duration(duration: Duration) -> String {
@@ -33,6 +34,19 @@ fn format_duration(duration: Duration) -> String {
     let milliseconds = duration.subsec_millis();
 
     format!("{:2}m {:02}s {:03}ms", minutes, seconds, milliseconds)
+}
+
+struct PlayLineCollector {
+    pub lines: Vec<Line<'static>>,
+}
+
+impl BlockExtendedDisplayCollector for PlayLineCollector {
+    fn push(&mut self, item: &dyn std::fmt::Display) {
+        self.lines.push(Line::from(vec![
+            "                            ".into(),
+            item.to_string().into(),
+        ]));
+    }
 }
 
 pub fn run_play(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<()> {
@@ -174,6 +188,15 @@ pub fn run_play(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<
             terminal.insert_before(1, |buf| {
                 Paragraph::new(last_block_text).render(buf.area, buf);
             })?;
+
+            let mut extended_lines_collector = PlayLineCollector { lines: vec![] };
+            playlist.blocks[last_block_index].extended_display(&mut extended_lines_collector);
+            for line in extended_lines_collector.lines {
+                terminal.insert_before(1, |buf| {
+                    Paragraph::new(line).render(buf.area, buf);
+                })?;
+            }
+
             last_block_index += 1;
         }
 
