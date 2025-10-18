@@ -37,7 +37,7 @@ pub struct TurboSpeedDataBlock {
 
 impl fmt::Display for TurboSpeedDataBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "TurboSpeedDataBlock: {:5} bytes, pause {:5}ms (pilot: {}*{}; sync1 {}+{}; 0/1: {}/{}; used_bits: {})",
+        write!(f, "TurboSpeedDataBlock: {:5} bytes, pause {:5}ms (pilot: {}*{}; sync {}+{}; 0/1: {}/{}; used_bits: {})",
             self.data.len(),
             self.pause,
             self.length_pulse_pilot,
