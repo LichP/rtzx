@@ -9,6 +9,7 @@ use crate::tzx::{
     blocks::{Block, BlockType},
     waveforms::{
         DataWaveform,
+        PauseType,
         PauseWaveform,
         PilotWaveform,
         SyncWaveform,
@@ -77,9 +78,7 @@ impl Block for TurboSpeedDataBlock {
             self.used_bits,
             if self.length_tone_pilot % 2 == 0 { start_pulse_high } else { !start_pulse_high },
         );
-        // let pause_source = PauseWaveform::new(if self.pause == 3076 { 5000 } else { self.pause });
-        //let pause_source = PauseWaveform::new(if self.pause == 12918 { 23000 } else { self.pause });
-        let pause_source = PauseWaveform::new(config.clone(), self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::Zero);
 
         return vec![Box::new(pilot_source), Box::new(sync_pulses_source), Box::new(data_source), Box::new(pause_source)];
     }

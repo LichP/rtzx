@@ -8,6 +8,7 @@ use crate::tzx::{
     Config,
     blocks::{Block, BlockType},
     waveforms::{
+        PauseType,
         PauseWaveform,
         Waveform,
     },
@@ -32,7 +33,7 @@ impl Block for PauseOrStopTapeCommand {
     }
 
     fn get_waveforms(&self, config: Arc<Config>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
-        let pause_source = PauseWaveform::new(config, self.pause);
+        let pause_source = PauseWaveform::new(config, self.pause, PauseType::Zero);
         return vec![Box::new(pause_source)];
     }
 

@@ -9,6 +9,7 @@ use crate::tzx::{
     blocks::{Block, BlockType},
     waveforms::{
         DataWaveform,
+        PauseType,
         PauseWaveform,
         PilotWaveform,
         SyncWaveform,
@@ -60,7 +61,7 @@ impl Block for StandardSpeedDataBlock {
             8,
             start_pulse_high,
         );
-        let pause_source = PauseWaveform::new(config.clone(), self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::StartLow);
 
         return vec![Box::new(pilot_source), Box::new(sync_pulses_source), Box::new(data_source), Box::new(pause_source)];
     }

@@ -9,6 +9,7 @@ use crate::tzx::{
     blocks::{Block, BlockType},
     waveforms::{
         DirectWaveform,
+        PauseType,
         PauseWaveform,
         Waveform,
     },
@@ -52,7 +53,7 @@ impl Block for DirectRecording {
             self.used_bits,
             start_pulse_high,
         );
-        let pause_source = PauseWaveform::new(config.clone(), self.pause);
+        let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::StartLow);
 
         return vec![Box::new(direct_source), Box::new(pause_source)];
     }
