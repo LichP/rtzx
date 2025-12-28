@@ -5,9 +5,11 @@ edition = "2024"
 
 [dependencies]
 binrw = "0.15.0"
+bitvec = "1.0.1"
 bon = "3.8.1"
 clap = { version = "4.5.48", features = ["derive"] }
 cpal = "0.16.0"
+crc = "3.4.0"
 crossterm = "0.29.0"
 figlet-rs = "0.1.5"
 hound = "3.5.1"
