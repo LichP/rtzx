@@ -87,6 +87,8 @@ impl Waveform for PauseWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { self.sample_index > 0 }
 }
 
 impl fmt::Display for PauseWaveform {

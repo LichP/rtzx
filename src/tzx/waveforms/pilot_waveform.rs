@@ -19,8 +19,9 @@ pub struct PilotWaveform {
     config: Arc<Config>,
     length_pulse: u16,
     length_tone: u16,
-    current_pulse_index: usize,
     pulses: Vec<Pulse>,
+    current_pulse_index: u32,
+    current_pulse_sample_index: u32,
 }
 
 impl PilotWaveform {
@@ -38,6 +39,7 @@ impl PilotWaveform {
             length_tone,
             current_pulse_index: 0,
             pulses: pulses,
+            current_pulse_sample_index: 0,
         }
     }
 }
@@ -88,6 +90,8 @@ impl Waveform for PilotWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { self.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
 
     fn visualise(&self) -> String {
         let mut pulse_string = "".to_string();

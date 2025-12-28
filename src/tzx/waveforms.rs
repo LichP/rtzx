@@ -24,6 +24,8 @@ use std::fmt;
 pub trait Waveform: Source + fmt::Display {
     fn clone_box(&self) -> Box<dyn Waveform + Send>;
 
+    fn started(&self) -> bool;
+
     fn visualise(&self) -> String { "".to_string() }
 }
 

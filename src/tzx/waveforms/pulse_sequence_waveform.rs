@@ -19,6 +19,7 @@ pub struct PulseSequenceWaveform {
     config: Arc<Config>,
     total_length: usize,
     current_pulse_index: usize,
+    current_pulse_sample_index: u32,
     pulses: Vec<Pulse>,
 }
 
@@ -38,6 +39,7 @@ impl PulseSequenceWaveform {
             config,
             total_length,
             current_pulse_index: 0,
+            current_pulse_sample_index: 0,
             pulses: pulses,
         }
     }
@@ -91,6 +93,8 @@ impl Waveform for PulseSequenceWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { self.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
 }
 
 impl fmt::Display for PulseSequenceWaveform {

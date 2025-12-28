@@ -21,6 +21,7 @@ pub struct DirectWaveform {
     data: Vec<u8>,
     used_bits: u8,
     current_pulse_index: usize,
+    current_pulse_sample_index: u32,
     pulses: Vec<Pulse>,
 }
 
@@ -48,6 +49,7 @@ impl DirectWaveform {
             data: data.to_owned(),
             used_bits,
             current_pulse_index: 0,
+            current_pulse_sample_index: 0,
             pulses: pulses,
         }
     }
@@ -108,6 +110,9 @@ impl Waveform for DirectWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { self.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
+
     fn visualise(&self) -> String {
         let mut pulse_string = "".to_string();
         let mut pulse_index = self.current_pulse_index;

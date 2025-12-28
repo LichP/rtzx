@@ -117,6 +117,8 @@ impl Waveform for DataWaveform {
         Box::new(self.clone())
     }
 
+    fn started(&self) -> bool { self.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
+
     fn visualise(&self) -> String {
         let pulse_string_length = 32;
         let mut pulse_string = "".to_string();

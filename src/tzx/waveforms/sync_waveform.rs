@@ -19,6 +19,7 @@ pub struct SyncWaveform {
     length_pulse_sync_first: u16,
     length_pulse_sync_second: u16,
     is_first_pulse: bool,
+    current_pulse_sample_index: u32,
     pulse_first: Pulse,
     pulse_second: Pulse,
 }
@@ -30,6 +31,7 @@ impl SyncWaveform {
             length_pulse_sync_first,
             length_pulse_sync_second,
             is_first_pulse: true,
+            current_pulse_sample_index: 0,
             pulse_first: Pulse::new(config.clone(), length_pulse_sync_first, start_pulse_high),
             pulse_second: Pulse::new(config.clone(), length_pulse_sync_second, !start_pulse_high),
         }
@@ -67,6 +69,8 @@ impl Waveform for SyncWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { !self.is_first_pulse || self.current_pulse_sample_index > 0 }
 }
 
 impl fmt::Display for SyncWaveform {
