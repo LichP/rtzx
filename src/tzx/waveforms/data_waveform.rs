@@ -115,7 +115,7 @@ impl Source for DataWaveform {
 
         // Use the pos / total_duration percentage time progress
         // to estimate the byte position within the payload.
-        let estimated_byte_index = std::cmp::max((self.payload.len() as f32 * pos.div_duration_f32(self.total_duration().unwrap())) as usize, self.payload.len() - 1);
+        let estimated_byte_index = std::cmp::min((self.payload.len() as f32 * pos.div_duration_f32(self.total_duration().unwrap())) as usize, self.payload.len() - 1);
 
         // Calculate the number of samples in the start to estimated byte position range.
         let mut pulse = self.current_pulse.clone();
