@@ -44,6 +44,8 @@ impl Waveform for EmptyWaveform {
     fn clone_box(&self) -> Box<dyn Waveform + Send> {
         Box::new(self.clone())
     }
+
+    fn started(&self) -> bool { false }
 }
 
 impl fmt::Display for EmptyWaveform {
