@@ -1,9 +1,9 @@
 rtzx
 ====
 
-`rtzx` is a command-line utility for interacting with [ZX Spectrum](https://en.wikipedia.org/wiki/ZX_Spectrum) `.tzx` and [Amstrad CPC](https://en.wikipedia.org/wiki/Amstrad_CPC) `.cdt` tape data file, written in Rust. It supports insepcting `.tzx`/`.cdt` files, converting to wav, and real time playback with a nice user interface for loading tape programs on a real Spectrum or CPC computer.
+`rtzx` is a command-line utility for interacting with [ZX Spectrum](https://en.wikipedia.org/wiki/ZX_Spectrum) `.tzx` and [Amstrad CPC](https://en.wikipedia.org/wiki/Amstrad_CPC) `.cdt` tape data files. It supports inspecting `.tzx`/`.cdt` files, converting to wav, and real time playback with a nice user interface for loading tape programs on a real Spectrum or CPC computer. Rtzx is written in [Rust](https://rust-lang.org/).
 
-Given the relative difficulty of transfering data to floppy disk in this day and age, tape playback is one of the easiest ways of loading programs on actual hardware, requiring only a suitable audio cable to connect your PC's audio output to the tape input of the 8-bit computer.
+Given the relative difficulty of transferring data to floppy disk in this day and age, tape playback is one of the easiest ways of loading programs on actual hardware, requiring only a suitable audio cable to connect your PC's audio output to the tape input of the 8-bit computer.
 
 ## Usage
 
@@ -33,7 +33,7 @@ To convert a file to wav, you also need to specify an output file:
 rtzx convert -o my-cdt-as-wav.wav path/to/my-cdt-file.cdt
 ```
 
-Outputted wav files are single channel using a 44.1k sample rate by default. An alternative sample rate can be specified using the `--sample-rate` / `-s` command as per the `play` command.
+Outputted wav files are single channel using a 44.1k sample rate by default. An alternative sample rate can be specified using the `--sample-rate` / `-s` option, and timings can be adjusted with `--playback-duration-percent` / `-d` as per the `play` command.
 
 ### `play`
 
@@ -47,26 +47,43 @@ This plays back the specified file and displays a user interface showing the rea
 
 The user interface allows you to pause and unpause playback using the space key. This is useful when a program stops the tape part way through and resumes later on (e.g. a game loading a subsequent set of levels after playing through the first levels): you can press space during a defined pause after you hear the tape relay click. Another use for this feature is when a tzx/cdt file defines a pause at the end of a data block that's too short: you can manually pause and unpause to compensate.
 
+You can also skip backwards and forwards through the blocks using the left and right arrow keys. This is usefl for skipping pas long opening pauses, or to skip forwards to a particular block in a multi-program file.
+
+#### Sample rate
+
 The sound is output with a sample rate of 44.1k by default, as recommended by the spec: most TZX / CDT files
-will have been generated 22.05k / 44.1k recordings, so timings work best with this sample rate. You can specify alternative sample rates with the `--sample-rate` / `-s` option:
+will have been generated 22.05k / 44.1k recordings, so timings usually work best with this sample rate. You can specify alternative sample rates with the `--sample-rate` / `-s` option:
 
 ```sh
 rtzx play -s 48000 path/to/my-cdt-file.cdt
 ```
 
+#### Playback duration
+
+Default playback timings can sometimes be too fast for real hardware to cope with. This appears to be particularly the case with CDTs for newer software that have been optimised for emulator loading. the `--playback-duration-percent` / `-d` option can be used to slow down (or speed up) the playback by increasing / decreading the length of all timing pulses:
+
+```sh
+# Increase duration by 10%
+rtzx play -d=+10 path/to/my-cdt-file.cdt
+# Decrease duration by 5%
+rtzx play -d=-5 path/to/my-cdt-file.cdt
+```
+
+Note that this option does not affect pauses: these are defined in milliseconds and always play out as specified.
+
 ## Platforms
 
 The [TZX file format](https://worldofspectrum.net/TZXformat.html) was created for digitising tapes made for the ZX Spectrum, and as other platforms used sufficiently similar tape loading schemes, the file format is also used for these other platforms.
 
-The main difference between platforms is the playback timings: all timings defined in the TZX format use the ZX Spectrum clock speed of 3.5MHz, so when playing back for another platform that uses a different clock speed the timings must be used accordingly.
+At present `rtzx` supports two platforms: the ZX Spectrum and the Amstrad CPC.
 
-At present `rtzx` supports two platforms: the ZX Spectrum and the Amstrad CPC. When playing back or converting to wav in Amstrad CPC mode, timings are adjusted for the CPC's 4MHz clock (i.e. multiplied by 4/3.5).
-
-The platform is determined automatically from the file name (`.tzx` => ZX Spectrum, `.cdt` => Amstrad CPC), but can be overruled with the `--platform` / `-p` option:
+The platform is determined automatically from the file name (`.tzx` => ZX Spectrum, `.cdt` => Amstrad CPC), but can be overruled with the `--platform` / `-p` option, although this no longer has any affect on playback or vonversion as of `rtzx` version 0.3.0:
 
 ```sh
 rtzx play -p amstrad-cpc path/to/tzx-file-with-cpc-timings.tzx
 ```
+
+For playback, there's no difference between platforms. Earlier versions of `rtzx` erroneously adjusted playback timings, resulting in slower playback for CDT files. CDT files now play back / convert using the default timings as per TZX playback, however fine-grained playback timing adjustments can now instead be made with the `--playback-duration-percent` / `-d` option (see above). `-d=+15` will produce a playback speed close to the default speed in versions 0.1.0 and 0.2.0.
 
 ## Supported block types
 
@@ -124,7 +141,7 @@ To build you can then run `cargo build` from a checkout of the repo and you'll t
 You can also build and run directly with `cargo`, using the `--` argument to make cargo pass the subsequent args to `rtzx`:
 
 ```sh
-cargo run -- play path/to/my--cdt-file.cdt
+cargo run -- play path/to/my-cdt-file.cdt
 ```
 
 ## Contact and Contributing
