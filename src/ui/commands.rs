@@ -17,7 +17,7 @@ pub enum Commands {
     /// Convert a tape file to wav
     Convert(ConvertArgs),
     /// Inspect a tape file
-    Inspect(FileArgs),
+    Inspect(InspectArgs),
     /// Play a tape file
     Play(PlayArgs),
 }
@@ -25,7 +25,7 @@ pub enum Commands {
 impl Commands {
     pub fn file_name(&self) -> Option<PathBuf> {
         match self {
-            Commands::Inspect(args) => Some(args.file_name.clone()),
+            Commands::Inspect(args) => Some(args.file.file_name.clone()),
             Commands::Play(args) => Some(args.file.file_name.clone()),
             Commands::Convert(args) => Some(args.file.file_name.clone()),
         }
@@ -76,6 +76,16 @@ pub struct ConvertArgs {
 
     #[arg(short, long)]
     output_file_name: String,
+}
+
+#[derive(Args)]
+pub struct InspectArgs {
+    #[command(flatten)]
+    file: FileArgs,
+
+    /// Include waveforms in the inspection.
+    #[arg(short, long, default_value_t = false)]
+    pub waveforms: bool
 }
 
 #[derive(Args)]

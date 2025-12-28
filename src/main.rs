@@ -39,7 +39,7 @@ fn main() -> io::Result<()> {
     let tzx_data = TzxData::parse_from(file);
 
     return match &cli.command {
-        Some(Commands::Inspect(_)) => run_inspect(file_name, &config, &tzx_data),
+        Some(Commands::Inspect(args)) => run_inspect(file_name, &config, args.waveforms, &tzx_data),
         Some(Commands::Convert(args)) => run_convert(&args, &config, &tzx_data),
         Some(Commands::Play(_)) => run_play(file_name, &config, &tzx_data),
         None => Ok(()),
