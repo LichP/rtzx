@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 use crate::tzx::{
     Config,
+    ExtendedDisplayCollector,
     blocks::{Block, BlockType},
+    data::DataPayload,
     waveforms::{
         DataWaveform,
         PauseType,
@@ -27,19 +29,18 @@ pub struct TurboSpeedDataBlock {
     length_pulse_zero: u16,
     length_pulse_one: u16,
     length_tone_pilot: u16,
+    #[br(temp)]
+    #[bw(calc = payload.used_bits)]
     used_bits: u8,
     pause: u16,
-    #[br(parse_with = binrw::helpers::read_u24)]
-    #[bw(write_with = binrw::helpers::write_u24)]
-    length: u32,
-    #[br(count = length)]
-    data: Vec<u8>,
+    #[br(args(used_bits))]
+    payload: DataPayload,
 }
 
 impl fmt::Display for TurboSpeedDataBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "TurboSpeedDataBlock: {:5} bytes, pause {:5}ms (pilot: {}*{}; sync {}+{}; 0/1: {}/{}; used_bits: {})",
-            self.data.len(),
+            self.payload.len(),
             self.pause,
             self.length_pulse_pilot,
             self.length_tone_pilot,
@@ -47,7 +48,7 @@ impl fmt::Display for TurboSpeedDataBlock {
             self.length_pulse_sync_second,
             self.length_pulse_zero,
             self.length_pulse_one,
-            self.used_bits
+            self.payload.used_bits
         )
     }
 }
@@ -74,8 +75,7 @@ impl Block for TurboSpeedDataBlock {
             config.clone(),
             self.length_pulse_zero,
             self.length_pulse_one,
-            &self.data,
-            self.used_bits,
+            self.payload.clone(),
             if self.length_tone_pilot % 2 == 0 { start_pulse_high } else { !start_pulse_high },
         );
         let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::Zero);
@@ -93,5 +93,11 @@ impl Block for TurboSpeedDataBlock {
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
+    }
+
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
+        if let Some(payload) = self.payload.read_payload() {
+            out.push(&format!("{}", payload));
+        }
     }
 }

@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 use crate::tzx::{
     Config,
+    ExtendedDisplayCollector,
     blocks::{Block, BlockType},
+    data::DataPayload,
     waveforms::{
         DataWaveform,
         PauseType,
@@ -21,23 +23,22 @@ use crate::tzx::{
 pub struct PureDataBlock {
     length_pulse_zero: u16,
     length_pulse_one: u16,
+    #[br(temp)]
+    #[bw(calc = payload.used_bits)]
     used_bits: u8,
     pause: u16,
-    #[br(parse_with = binrw::helpers::read_u24)]
-    #[bw(write_with = binrw::helpers::write_u24)]
-    length: u32,
-    #[br(count = length)]
-    data: Vec<u8>,
+    #[br(args(used_bits))]
+    payload: DataPayload,
 }
 
 impl fmt::Display for PureDataBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "PureDataBlock: {:5} bytes, pause {:5}ms (0/1: {}/{}; used_bits: {})",
-            self.data.len(),
+            self.payload.len(),
             self.pause,
             self.length_pulse_zero,
             self.length_pulse_one,
-            self.used_bits
+            self.payload.used_bits
         )
     }
 }
@@ -52,8 +53,7 @@ impl Block for PureDataBlock {
             config.clone(),
             self.length_pulse_zero,
             self.length_pulse_one,
-            &self.data,
-            self.used_bits,
+            self.payload.clone(),
             start_pulse_high,
         );
         let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::StartLow);
@@ -67,5 +67,11 @@ impl Block for PureDataBlock {
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
+    }
+
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
+        if let Some(payload) = self.payload.read_payload() {
+            out.push(&format!("{}", payload));
+        }
     }
 }

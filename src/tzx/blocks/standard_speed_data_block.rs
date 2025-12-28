@@ -6,7 +6,9 @@ use std::sync::Arc;
 
 use crate::tzx::{
     Config,
+    ExtendedDisplayCollector,
     blocks::{Block, BlockType},
+    data::DataPayload,
     waveforms::{
         DataWaveform,
         PauseType,
@@ -22,15 +24,13 @@ use crate::tzx::{
 #[derive(Clone)]
 pub struct StandardSpeedDataBlock {
     pause: u16,
-    #[bw(try_calc(u16::try_from(data.len())))]
-    length: u16,
-    #[br(count = length)]
-    data: Vec<u8>,
+    #[br(args(8))]
+    payload: DataPayload,
 }
 
 impl fmt::Display for StandardSpeedDataBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "StandardSpeedDataBlock: {} bytes, pause {}ms", self.data.len(), self.pause)
+        write!(f, "StandardSpeedDataBlock: {} bytes, pause {}ms", self.payload.len(), self.pause)
     }
 }
 
@@ -40,7 +40,7 @@ impl Block for StandardSpeedDataBlock {
     }
 
     fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
-        let header = self.data[0] < 128;
+        let header = self.payload.data[0] < 128;
         let pilot_source = PilotWaveform::new(
             config.clone(),
             2168,
@@ -57,8 +57,7 @@ impl Block for StandardSpeedDataBlock {
             config.clone(),
             855,
             1710,
-            &self.data,
-            8,
+            self.payload.clone(),
             start_pulse_high,
         );
         let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::StartLow);
@@ -68,5 +67,11 @@ impl Block for StandardSpeedDataBlock {
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
+    }
+
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
+        if let Some(payload) = self.payload.read_payload() {
+            out.push(&format!("{}", payload));
+        }
     }
 }
