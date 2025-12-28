@@ -1,7 +1,8 @@
 pub mod blocks;
 pub mod config;
-pub mod header;
 pub mod data;
+pub mod header;
+pub mod tap;
 pub mod tzx_data;
 pub mod platform;
 pub mod playlist;
