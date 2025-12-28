@@ -21,12 +21,16 @@ use rodio::{
 };
 use std::fmt;
 
+use crate::tzx::data::DataPayloadWithPosition;
+
 pub trait Waveform: Source + fmt::Display {
     fn clone_box(&self) -> Box<dyn Waveform + Send>;
 
     fn started(&self) -> bool;
 
-    fn visualise(&self) -> String { "".to_string() }
+    fn visualise(&self, _pulse_string_length: usize) -> String { "".to_string() }
+
+    fn payload_with_position(&self) -> Option<DataPayloadWithPosition> { None }
 }
 
 impl Clone for Box<dyn Waveform + Send> {

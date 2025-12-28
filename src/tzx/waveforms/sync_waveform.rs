@@ -2,6 +2,7 @@ use rodio::{
     ChannelCount,
     SampleRate,
     Source,
+    source::SeekError,
 };
 use std::fmt;
 use std::sync::Arc;
@@ -43,14 +44,18 @@ impl Iterator for SyncWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first_pulse {
-            let pulse_sample = self.pulse_first.next();
+            let pulse_sample = self.pulse_first.get_next_sample(self.current_pulse_sample_index);
             if pulse_sample.is_some() {
+                self.current_pulse_sample_index += 1;
                 return pulse_sample;
             }
 
             self.is_first_pulse = false;
+            self.current_pulse_sample_index = 0;
         }
-        return self.pulse_second.next();
+        let pulse_sample = self.pulse_second.get_next_sample(self.current_pulse_sample_index);
+        self.current_pulse_sample_index += 1;
+        return pulse_sample;
     }
 }
 
@@ -62,6 +67,19 @@ impl Source for SyncWaveform {
     fn total_duration(&self) -> Option<Duration> {
         //return Some(Duration::from_secs_f64((self.pulse_first.len() as f64 + self.pulse_second.len() as f64) / 48000.0));
         return Some(self.pulse_first.duration() + self.pulse_second.duration());
+    }
+
+    fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u32;
+        self.current_pulse_sample_index = 0;
+        if samples < self.pulse_first.len() {
+            self.is_first_pulse = true;
+            self.current_pulse_sample_index = samples;
+        } else {
+            self.is_first_pulse = true;
+            self.current_pulse_sample_index = samples - self.pulse_first.len();
+        }
+       return Ok(());
     }
 }
 

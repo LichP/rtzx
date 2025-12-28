@@ -1,3 +1,4 @@
+use bitvec::prelude::*;
 use rodio::{
     ChannelCount,
     SampleRate,
@@ -10,6 +11,7 @@ use std::time::Duration;
 
 use crate::tzx::{
     Config,
+    data::{DataPayload, DataPayloadWithPosition},
     waveforms::{Pulse, Waveform},
 };
 
@@ -19,51 +21,51 @@ pub struct DataWaveform {
     config: Arc<Config>,
     length_pulse_zero: u16,
     length_pulse_one: u16,
-    data: Vec<u8>,
-    used_bits: u8,
+    payload: DataPayload,
+    start_pulse_high: bool,
+    current_pulse: Pulse,
     current_pulse_index: usize,
-    count_set_bits: u64,
-    pulses: Vec<Pulse>,
+    current_pulse_sample_index: usize,
 }
 
 impl DataWaveform {
-    pub fn new(config: Arc<Config>, length_pulse_zero: u16, length_pulse_one: u16, data: &Vec<u8>, used_bits: u8, start_pulse_high: bool) -> Self {
-        let mut pulses: Vec<Pulse> = vec![];
+    pub fn new(config: Arc<Config>, length_pulse_zero: u16, length_pulse_one: u16, payload: DataPayload, start_pulse_high: bool) -> Self {
+        let first_bit = payload.data.view_bits::<Msb0>()[0];
+        let first_bit_length = if first_bit { length_pulse_one } else { length_pulse_zero };
 
-        for (index, byte) in data.iter().enumerate() {
-            let mut data_bit_index: u8 = 0;
-            while data_bit_index < 8 {
-                if index == data.len() - 1 && data_bit_index + 1 > used_bits {
-                    data_bit_index += 1;
-                    continue;
-                }
-                let bit_mask: u8 = 1 << (7 - data_bit_index);
-                let current_bit_set = byte & bit_mask == bit_mask;
-                let length_pulse = if current_bit_set { length_pulse_one } else { length_pulse_zero };
-                pulses.push(Pulse::new(config.clone(), length_pulse, start_pulse_high));
-                pulses.push(Pulse::new(config.clone(), length_pulse,!start_pulse_high));
-                data_bit_index += 1;
-            }
-        }
+        let current_pulse = Pulse::new(config.clone(), first_bit_length, start_pulse_high);
 
         return Self {
             config,
             length_pulse_zero,
             length_pulse_one,
-            data: data.to_owned(),
-            used_bits,
+            payload: payload,
+            start_pulse_high,
+            current_pulse,
             current_pulse_index: 0,
-            count_set_bits: popcnt::count_ones(data.as_slice()),
-            pulses: pulses,
+            current_pulse_sample_index: 0,
+        }
+    }
+
+    fn has_data_remaining(&self) -> bool { self.current_pulse_index < self.payload.total_bits() * 2 }
+
+    fn update_pulse(&mut self) {
+        if self.has_data_remaining() {
+            let current_bit = self.payload.data.view_bits::<Msb0>()[self.current_pulse_index as usize / 2];
+            self.current_pulse.length = if current_bit { self.length_pulse_one } else { self.length_pulse_zero };
+            self.current_pulse.high = !((self.current_pulse_index % 2 == 0) ^ self.start_pulse_high)
         }
     }
 }
 
 impl fmt::Display for DataWaveform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "DataWaveform:   {:6} / {:6} pulses",
+        let bit_counts = self.payload.bit_counts();
+        write!(f, "DataWaveform:   {:6} / {:6} pulses (0+1: {}+{})",
             self.current_pulse_index,
-            self.pulses.len(),
+            bit_counts.total * 2,
+            bit_counts.zeros,
+            bit_counts.ones,
         )
     }
 }
@@ -72,15 +74,19 @@ impl Iterator for DataWaveform {
     type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.current_pulse_index < self.pulses.len() {
-            let pulse_sample = self.pulses[self.current_pulse_index].next();
+        if self.current_pulse_index < self.payload.total_bits() * 2 {
+            let pulse_sample: Option<Self::Item> = self.current_pulse.get_next_sample(self.current_pulse_sample_index as u32);
             if pulse_sample.is_some() {
+                self.current_pulse_sample_index += 1;
                 return pulse_sample;
             }
 
             self.current_pulse_index += 1;
-            if self.current_pulse_index < self.pulses.len() {
-                return self.pulses[self.current_pulse_index].next()
+            self.current_pulse_sample_index = 0;
+
+            if self.has_data_remaining() {
+                self.update_pulse();
+                return self.next();
             }
         }
         return None;
@@ -94,19 +100,49 @@ impl Source for DataWaveform {
 
     fn total_duration(&self) -> Option<Duration> {
         let mut duration = Duration::ZERO;
-        for pulse in &self.pulses {
-            duration += pulse.duration();
-        }
+        let mut pulse = self.current_pulse.clone();
+        let bit_counts = self.payload.bit_counts();
+        pulse.length = self.length_pulse_one;
+        duration += pulse.duration() * bit_counts.ones as u32 * 2;
+        pulse.length = self.length_pulse_zero;
+        duration += pulse.duration() * bit_counts.zeros as u32 * 2;
         return Some(duration);
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u128;
-        let mut pulse_samples = 0;
-        self.current_pulse_index = 0;
-        while pulse_samples < samples && self.current_pulse_index < self.pulses.len() {
-            pulse_samples += self.pulses[self.current_pulse_index].len() as u128;
-            self.current_pulse_index += 1;
+        if self.payload.len() == 0 { return Ok(()) }
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as usize;
+
+        // Use the pos / total_duration percentage time progress
+        // to estimate the byte position within the payload.
+        let estimated_byte_index = std::cmp::max((self.payload.len() as f32 * pos.div_duration_f32(self.total_duration().unwrap())) as usize, self.payload.len() - 1);
+
+        // Calculate the number of samples in the start to estimated byte position range.
+        let mut pulse = self.current_pulse.clone();
+        let mut pulse_samples: usize = 0;
+        let bit_counts_to_index = self.payload.bit_counts_for_range(0..estimated_byte_index).unwrap();
+        pulse.length = self.length_pulse_one;
+        pulse_samples += pulse.len() as usize * bit_counts_to_index.ones * 2;
+        pulse.length = self.length_pulse_zero;
+        pulse_samples += pulse.len() as usize * bit_counts_to_index.zeros * 2;
+
+        self.current_pulse_index = estimated_byte_index * 16;
+        self.current_pulse_sample_index = 0;
+
+        while pulse_samples > samples && self.current_pulse_index > 0 {
+            pulse_samples -= self.current_pulse.len() as usize;
+            self.current_pulse_index -= 1;
+            self.update_pulse();
+        }
+
+        while pulse_samples < samples && self.has_data_remaining() {
+            pulse_samples += self.current_pulse.len() as usize;
+            if pulse_samples > samples {
+                self.current_pulse_sample_index = pulse_samples - samples;
+            } else {
+                self.current_pulse_index += 1;
+                self.update_pulse();
+            }
         }
         return Ok(());
     }
@@ -119,19 +155,30 @@ impl Waveform for DataWaveform {
 
     fn started(&self) -> bool { self.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
 
-    fn visualise(&self) -> String {
-        let pulse_string_length = 32;
+    fn visualise(&self, pulse_string_length: usize) -> String {
         let mut pulse_string = "".to_string();
         let mut pulse_index = self.current_pulse_index;
+        let mut current_high = self.current_pulse.high;
         let mut current_char: char;
-        while pulse_string.chars().count() < pulse_string_length && pulse_index < self.pulses.len() {
-            current_char = if self.pulses[pulse_index].high { '\u{2588}' } else { ' ' };
+        while pulse_string.chars().count() < pulse_string_length && pulse_index < self.payload.total_bits() * 2 {
+            current_char = if current_high { '\u{2588}' } else { ' ' };
             pulse_string.push(current_char);
-            if self.pulses[pulse_index].length == self.length_pulse_one && pulse_string.chars().count() < pulse_string_length {
+            if self.payload.data.view_bits::<Msb0>()[pulse_index as usize / 2] && pulse_string.chars().count() < pulse_string_length {
                 pulse_string.push(current_char);
             }
             pulse_index += 1;
+            current_high = !current_high;
         }
         return pulse_string;
+    }
+
+    fn payload_with_position(&self) -> Option<DataPayloadWithPosition> {
+        Some(
+            DataPayloadWithPosition {
+                payload: self.payload.clone(),
+                current_byte_index: self.current_pulse_index as usize / 16,
+                current_bit_index: ((self.current_pulse_index / 2) % 8 ) as u8,
+            }
+        )
     }
 }

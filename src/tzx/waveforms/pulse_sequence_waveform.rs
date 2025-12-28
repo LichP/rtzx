@@ -50,14 +50,16 @@ impl Iterator for PulseSequenceWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_pulse_index < self.pulses.len() {
-            let pulse_sample = self.pulses[self.current_pulse_index].next();
+            let pulse_sample = self.pulses[self.current_pulse_index].get_next_sample(self.current_pulse_sample_index);
             if pulse_sample.is_some() {
+                self.current_pulse_sample_index += 1;
                 return pulse_sample;
             }
 
             self.current_pulse_index += 1;
+            self.current_pulse_sample_index = 0;
             if self.current_pulse_index < self.pulses.len() {
-                return self.pulses[self.current_pulse_index].next()
+                return self.pulses[self.current_pulse_index].get_next_sample(self.current_pulse_sample_index)
             }
         }
         return None;
@@ -78,12 +80,17 @@ impl Source for PulseSequenceWaveform {
     }
 
     fn try_seek(&mut self, pos: Duration) -> Result<(), SeekError> {
-        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u128;
+        let samples = (pos.as_secs_f64() * self.config.sample_rate as f64).round() as u32;
         let mut pulse_samples = 0;
         self.current_pulse_index = 0;
+        self.current_pulse_sample_index = 0;
         while pulse_samples < samples && self.current_pulse_index < self.pulses.len() {
-            pulse_samples += self.pulses[self.current_pulse_index].len() as u128;
-            self.current_pulse_index += 1;
+            pulse_samples += self.pulses[self.current_pulse_index].len();
+            if pulse_samples >= samples {
+                self.current_pulse_sample_index = pulse_samples - samples;
+            } else {
+                self.current_pulse_index += 1;
+            }
         }
         return Ok(());
     }
