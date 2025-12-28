@@ -8,7 +8,6 @@ pub struct Pulse {
     pub config: Arc<Config>,
     pub length: u16,
     pub high: bool,
-    index: u32,
 }
 
 impl Pulse {
@@ -17,12 +16,11 @@ impl Pulse {
             config,
             length,
             high,
-            index: 0,
         }
     }
 
     pub fn len(&self) -> u32 {
-        return (self.length as f64 * self.config.platform.t_cycle_secs() * self.config.sample_rate as f64).round() as u32
+        return (self.length as f64 * self.config.platform.t_cycle_secs_playback(self.config.playback_duration_percent) * self.config.sample_rate as f64).round() as u32
     }
 
     pub fn duration(&self) -> Duration {
@@ -32,14 +30,9 @@ impl Pulse {
     pub fn get_sample(&self) -> f32 {
         return if self.high { 1.0f32 } else { -1.0f32 }
     }
-}
 
-impl Iterator for Pulse {
-    type Item = f32;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.index < self.len() {
-            self.index += 1;
+    pub fn get_next_sample(&self, index: u32) -> Option<f32> {
+        if index < self.len() {
             return Some(self.get_sample());
         }
         return None;
