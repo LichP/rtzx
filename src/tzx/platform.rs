@@ -25,12 +25,12 @@ impl Platform {
         }
     }
 
-    pub fn t_cycle_multiplier(&self) -> f64 {
+    pub fn t_cycle_multiplier_record(&self) -> f64 {
         match self {
             Platform::AmstradCPC => 4.0 / 3.5,
             Platform::ZXSpectrum => 1.0,
         }
     }
 
-    pub fn t_cycle_secs(&self) -> f64 { T_CYCLE_LENGTH * self.t_cycle_multiplier() }
+    pub fn t_cycle_secs_playback(&self, playback_speed_percent: i32) -> f64 { T_CYCLE_LENGTH * (100 + playback_speed_percent) as f64 / 100.0 }
 }
