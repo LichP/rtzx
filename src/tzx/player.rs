@@ -1,5 +1,6 @@
 use rodio::{Sink, Source};
 use std::sync::Arc;
+use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::tzx::{
@@ -135,7 +136,7 @@ impl<'a> Player<'a> {
     pub fn tick(&mut self) -> () {
         if !self.is_paused && !self.is_finished() {
             // Check to see if we need to queue any more data
-            while self.waveform_queued_index < self.waveforms.len() - 1 && (self.waveform_queued_index - self.waveform_queued_index < 1000) {
+            while self.waveform_queued_index < self.waveforms.len() - 1 && (self.waveform_queued_index - self.current_waveform_index < 1000) {
                 self.waveform_queued_index += 1;
                 let source: Box<dyn Source + Send> = self.waveforms_original[self.waveform_queued_index].clone();
                 self.sink.append(source);
@@ -245,6 +246,8 @@ impl<'a> Player<'a> {
     }
 
     pub fn finish(&mut self) {
+        // Allow enough time for buffered audio to be output
+        thread::sleep(self.config.buffer_delay() + Duration::from_millis(10));
         self.sink.stop();
     }
 
