@@ -13,7 +13,13 @@ pub fn run_convert(args: &ConvertArgs, config: &Config, tzx_data: &TzxData) -> i
         bits_per_sample: 16,
         sample_format: hound::SampleFormat::Int,
     };
-    let mut wav_writer = hound::WavWriter::create(&args.output_file_name, spec).expect("cannot open output wav file");
+
+    let output_file_name = match &args.output_file_name {
+        Some(file_name) => file_name,
+        None => &args.file.file_name.with_extension("wav")
+    };
+
+    let mut wav_writer = hound::WavWriter::create(output_file_name, spec).expect("Cannot open output wav file");
 
     let config = Arc::new(config.clone());
     let mut start_pulse_high = true;

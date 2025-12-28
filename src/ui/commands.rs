@@ -74,8 +74,9 @@ pub struct ConvertArgs {
     #[command(flatten)]
     file: FileArgs,
 
+    /// The filename to output to. Defaults to the same name as the tzx / cdt file with a .wav extension if not supplied.
     #[arg(short, long)]
-    output_file_name: String,
+    output_file_name: Option<PathBuf>,
 }
 
 #[derive(Args)]
