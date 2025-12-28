@@ -41,10 +41,11 @@ use binrw::{
 use std::fmt;
 use strum_macros::Display;
 
-use crate::tzx::blocks::{
-    Block, BlockType, BlockExtendedDisplayCollector,
+use crate::tzx::{
+    ExtendedDisplayCollector,
+    RecoveryEnum,
+    blocks::{Block, BlockType}
 };
-use crate::tzx::RecoveryEnum;
 
 #[binrw]
 #[brw(little)]
@@ -70,7 +71,7 @@ impl Block for HardwareTypeBlock {
         Box::new(self.clone())
     }
 
-    fn extended_display(&self, out: &mut dyn BlockExtendedDisplayCollector) {
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
         for entry in &self.entries {
             out.push(entry);
         }

@@ -42,6 +42,7 @@ pub use text_description::{TextDescription, MessageBlock};
 
 use crate::tzx::{
     Config,
+    ExtendedDisplayCollector,
     RecoveryEnum,
     waveforms::{EmptyWaveform, Waveform}
 };
@@ -71,11 +72,7 @@ pub trait Block: std::fmt::Display {
 
     fn clone_box(&self) -> Box<dyn Block>;
 
-    fn extended_display(&self, _out: &mut dyn BlockExtendedDisplayCollector) {}
-}
-
-pub trait BlockExtendedDisplayCollector {
-    fn push(&mut self, piece: &dyn std::fmt::Display);
+    fn extended_display(&self, _out: &mut dyn ExtendedDisplayCollector) {}
 }
 
 impl Clone for Box<dyn Block> {

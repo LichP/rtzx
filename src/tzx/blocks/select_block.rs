@@ -2,7 +2,10 @@ use binrw::{
     binrw,
 };
 use std::fmt;
-use crate::tzx::blocks::{Block, BlockType, BlockExtendedDisplayCollector};
+use crate::tzx::{
+    ExtendedDisplayCollector,
+    blocks::{Block, BlockType}
+};
 
 #[binrw]
 #[brw(little)]
@@ -30,7 +33,7 @@ impl Block for SelectBlock {
         Box::new(self.clone())
     }
 
-    fn extended_display(&self, out: &mut dyn BlockExtendedDisplayCollector) {
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
         for entry in &self.entries {
             out.push(entry);
         }

@@ -15,3 +15,7 @@ pub use tzx_data::TzxData;
 pub use platform::Platform;
 pub use playlist::Playlist;
 pub use recovery_enum::RecoveryEnum;
+
+pub trait ExtendedDisplayCollector {
+    fn push(&mut self, piece: &dyn std::fmt::Display);
+}

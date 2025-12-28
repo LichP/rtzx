@@ -4,8 +4,8 @@ use binrw::{
 };
 use std::fmt;
 use strum_macros::Display;
-use crate::tzx::blocks::{Block, BlockType, BlockExtendedDisplayCollector};
-use crate::tzx::RecoveryEnum;
+use crate::tzx::blocks::{Block, BlockType};
+use crate::tzx::{ExtendedDisplayCollector, RecoveryEnum};
 
 #[binrw]
 #[brw(little)]
@@ -33,7 +33,7 @@ impl Block for ArchiveInfo {
         Box::new(self.clone())
     }
 
-    fn extended_display(&self, out: &mut dyn BlockExtendedDisplayCollector) {
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
         for entry in &self.entries {
             out.push(entry);
         }
