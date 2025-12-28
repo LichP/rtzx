@@ -11,7 +11,7 @@ pub use pulse::Pulse;
 pub use data_waveform::DataWaveform;
 pub use direct_waveform::DirectWaveform;
 pub use empty_waveform::EmptyWaveform;
-pub use pause_waveform::PauseWaveform;
+pub use pause_waveform::{PauseType, PauseWaveform};
 pub use pilot_waveform::PilotWaveform;
 pub use pulse_sequence_waveform::PulseSequenceWaveform;
 pub use sync_waveform::SyncWaveform;

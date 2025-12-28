@@ -14,20 +14,46 @@ use crate::tzx::{
 };
 
 #[derive(Clone)]
+pub enum PauseType {
+    Zero,
+    Low,
+    High,
+    StartLow,
+    StartHigh,
+}
+
+impl PauseType {
+    fn sample(&self) -> f32 {
+        match self {
+            PauseType::Zero => 0f32,
+            PauseType::Low | PauseType::StartLow => -1.0f32,
+            PauseType::High | PauseType::StartHigh => -1.0f32,
+        }
+    }
+}
+
+#[derive(Clone)]
 pub struct PauseWaveform {
     config: Arc<Config>,
     length: u16,
+    pause_type: PauseType,
     sample_index: u64,
     start_pause_pulse: bool,
 }
 
 impl PauseWaveform {
-    pub fn new(config: Arc<Config>, length: u16) -> Self {
+    pub fn new(config: Arc<Config>, length: u16, pause_type: PauseType) -> Self {
+        let start_pause_pulse = match pause_type {
+            PauseType::StartLow | PauseType::StartHigh => true,
+            _ => false,
+        };
+
         return Self {
             config,
             length,
+            pause_type,
             sample_index: 0,
-            start_pause_pulse: true,
+            start_pause_pulse,
         }
     }
 
@@ -49,16 +75,15 @@ impl Iterator for PauseWaveform {
                 return Some(0.0f32);
             } else if self.sample_index < (self.config.sample_rate as f64 / 1000.0).round() as u64 {
                 self.sample_index += 1;
-                return Some(-1.0f32);
+                return Some(self.pause_type.sample());
             }
 
             self.start_pause_pulse = false;
-            //self.sample_index = 0;
         }
 
         if self.sample_index < self.len() {
             self.sample_index += 1;
-            return Some(0f32);
+            return Some(self.pause_type.sample());
         }
         return None;
     }
