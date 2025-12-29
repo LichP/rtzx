@@ -43,6 +43,15 @@ pub struct BitCounts {
 }
 
 impl DataPayload {
+    pub fn new(used_bits: u8, length: u32, data: Arc<Vec<u8>>) -> Self {
+        Self {
+            used_bits,
+            length,
+            data,
+            cached_bit_counts: OnceLock::new(),
+        }
+    }
+
     pub fn len(&self) -> usize { self.data.len() }
 
     pub fn bit_counts(&self) -> &BitCounts {
