@@ -24,18 +24,21 @@ pub struct PulseSequence {
 
 impl fmt::Display for PulseSequence {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PulseSequence: {} pulses (",
+        write!(f, "PulseSequence: {} pulses",
             self.length,
         )?;
         let max_display = if self.length > 12 { 12 } else { self.length };
-        write!(f, "{}", self.pulse_lengths[0])?;
-        for i in 1..max_display {
-            write!(f, ", {}", self.pulse_lengths[i as usize])?;
+        if self.length > 0 {
+            write!(f, " ({}", self.pulse_lengths[0])?;
+            for i in 1..max_display {
+                write!(f, ", {}", self.pulse_lengths[i as usize])?;
+            }
+            if max_display != self.length {
+                write!(f, ", ...")?;
+            }
+            write!(f, ")")?;
         }
-        if max_display != self.length {
-            write!(f, ", ...")?;
-        }
-        return write!(f, ")");
+        Ok(())
     }
 }
 
