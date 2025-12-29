@@ -56,19 +56,21 @@ impl Block for StandardSpeedDataBlock {
             config.clone(),
             667,
             735,
-            start_pulse_high,
+            !start_pulse_high,
         );
         let data_source = DataWaveform::new(
             config.clone(),
             855,
             1710,
             payload.clone(),
-            start_pulse_high,
+            !start_pulse_high,
         );
         let pause_source = PauseWaveform::new(config.clone(), self.pause, PauseType::StartLow);
 
         return vec![Box::new(pilot_source), Box::new(sync_pulses_source), Box::new(data_source), Box::new(pause_source)];
     }
+
+    fn next_block_start_pulse_high(&self, _config: Arc<Config>, _self_start_pulse_high: bool) -> bool { !self.pause > 0 }
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
