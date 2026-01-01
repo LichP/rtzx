@@ -119,9 +119,11 @@ impl Waveform for PilotWaveform {
 
 impl fmt::Display for PilotWaveform {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "PilotWaveform:  {:6} / {:6} pulses",
+        write!(f, "PilotWaveform:  {:6} / {:6} pulses (w: {:.2}→{})",
             self.current_pulse_index + 1,
             self.length_tone,
+            self.length_pulse as f64 * self.config.platform.t_cycle_secs_playback(self.config.playback_duration_percent) * self.config.sample_rate as f64,
+            (self.length_pulse as f64 * self.config.platform.t_cycle_secs_playback(self.config.playback_duration_percent) * self.config.sample_rate as f64).round() as u32,
         )
     }
 }
