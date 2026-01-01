@@ -4,6 +4,7 @@ pub mod call;
 pub mod custom_info_block;
 pub mod direct_recording;
 pub mod emulation_info;
+pub mod generalized_data_block;
 pub mod group;
 pub mod hardware_type;
 pub mod jump_to_block;
@@ -25,6 +26,7 @@ pub use call::{CallSequence, ReturnFromSequence};
 pub use custom_info_block::{CustomInfoBlock, InstructionsBlock};
 pub use direct_recording::DirectRecording;
 pub use emulation_info::EmulationInfo;
+pub use generalized_data_block::GeneralizedDataBlock;
 pub use group::{GroupStart, GroupEnd};
 pub use hardware_type::{HardwareTypeBlock, HardwareTypeBlockEntry};
 pub use jump_to_block::JumpToBlock;
@@ -94,7 +96,7 @@ pub struct UndefinedBlockTypeBlock {
 
 impl fmt::Display for UndefinedBlockTypeBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "UndefinedBlockTypeBlock: {0} ({0:#x})", self.block_type)
+        write!(f, "UndefinedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.length)
     }
 }
 
@@ -121,7 +123,7 @@ pub struct UnsupportedBlockTypeBlock {
 
 impl fmt::Display for UnsupportedBlockTypeBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "UnsupportedBlockTypeBlock: {0} ({0:#x})", self.block_type)
+        write!(f, "UnsupportedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.length)
     }
 }
 
@@ -168,6 +170,7 @@ pub fn read_block(block_type: RecoveryEnum<BlockType, u8>, mut reader: impl Read
             BlockType::PulseSequence => to_box_dyn(PulseSequence::read(&mut reader)),
             BlockType::PureDataBlock => to_box_dyn(PureDataBlock::read(&mut reader)),
             BlockType::DirectRecording => to_box_dyn(DirectRecording::read(&mut reader)),
+            BlockType::GeneralizedDataBlock => to_box_dyn(GeneralizedDataBlock::read(&mut reader)).or_else(|_| to_box_dyn(UnsupportedBlockTypeBlock::read_args(&mut reader,(block_type_known,)))),
             BlockType::PauseOrStopTapeCommand => to_box_dyn(PauseOrStopTapeCommand::read(&mut reader)),
             BlockType::GroupStart => to_box_dyn(GroupStart::read(&mut reader)),
             BlockType::GroupEnd => to_box_dyn(GroupEnd::read(&mut reader)),
