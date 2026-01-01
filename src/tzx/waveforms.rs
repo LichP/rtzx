@@ -30,6 +30,8 @@ pub trait Waveform: Source + fmt::Display {
 
     fn started(&self) -> bool;
 
+    fn current_baud(&self) -> Option<usize> { None }
+
     fn visualise(&self, _pulse_string_length: usize) -> String { "".to_string() }
 
     fn payload_with_position(&self) -> Option<DataPayloadWithPosition> { None }
