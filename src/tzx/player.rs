@@ -246,8 +246,12 @@ impl<'a> Player<'a> {
     }
 
     pub fn finish(&mut self) {
-        // Allow enough time for buffered audio to be output
-        thread::sleep(self.config.buffer_delay() + Duration::from_millis(10));
+        if self.is_finished() {
+            // Natural finish: Allow enough time for buffered audio to be output. In theory
+            // this should just be the buffer time we've configured, but in practice the OS
+            // might use a bigger buffer, so we wait for an extra second to be sure.
+            thread::sleep(self.config.buffer_delay() + Duration::from_millis(1000));
+        }
         self.sink.stop();
     }
 
