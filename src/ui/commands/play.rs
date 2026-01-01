@@ -256,6 +256,11 @@ fn render_waveform_data_line(waveform: &Box<dyn Waveform + Send>) -> Line<'_> {
     let mut spans: Vec<Span<'_>> = Vec::new();
     spans.push(format!("{}", waveform.visualise(64)).fg(Color::LightYellow).bg(Color::LightBlue));
 
+    if let Some(baud) = waveform.current_baud() {
+        spans.push(format!("  {:4}", baud).bold());
+        spans.push(" baud".into());
+    }
+
     if let Some(payload_with_position) = waveform.payload_with_position() {
         spans.push(format!("  {:04x}: ", payload_with_position.current_row_address()).into());
 
