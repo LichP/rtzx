@@ -267,6 +267,24 @@ impl Waveform for GeneralizedWaveform {
 
     fn started(&self) -> bool { self.pulse_iterator.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
 
+
+    fn current_baud(&self) -> Option<usize> {
+        let target_duration = Duration::from_millis(100);
+        let mut duration = Duration::ZERO;
+        let mut symbols: usize = 0;
+        let mut pulse_iterator = self.pulse_iterator.clone();
+        let mut payload_bit_index = pulse_iterator.current_payload_bit_index;
+
+        while duration < target_duration && let Some(pulse) = pulse_iterator.next() {
+            duration += pulse.duration();
+            if payload_bit_index != pulse_iterator.current_payload_bit_index {
+                payload_bit_index = pulse_iterator.current_payload_bit_index;
+                symbols += 1;
+            }
+        }
+        Some((symbols as f64 / duration.as_secs_f64()).round() as usize)
+    }
+
     fn visualise(&self, pulse_string_length: usize) -> String {
         let symbol_pulse_lengths = self.cached_symbol_pulse_lengths.get_or_init(|| self.compute_symbol_pulse_lengths());
 

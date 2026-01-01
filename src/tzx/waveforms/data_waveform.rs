@@ -195,6 +195,20 @@ impl Waveform for DataWaveform {
 
     fn started(&self) -> bool { self.pulse_iterator.current_pulse_index > 0 || self.current_pulse_sample_index > 0 }
 
+    fn current_baud(&self) -> Option<usize> {
+        let target_duration = Duration::from_millis(100);
+        let mut duration = Duration::ZERO;
+        let mut pulses: usize = 0;
+        let mut pulse_iterator = self.pulse_iterator.clone();
+
+        while duration < target_duration && let Some(pulse) = pulse_iterator.next() {
+            duration += pulse.duration();
+            pulses += 1;
+        }
+        // Two pulses = one symbol / bit, so halve the pulse count to get baud.
+        Some((pulses as f64 / duration.as_secs_f64()).round() as usize / 2)
+    }
+
     fn visualise(&self, pulse_string_length: usize) -> String {
         let mut pulse_string = "".to_string();
 
