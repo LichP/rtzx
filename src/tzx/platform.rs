@@ -1,9 +1,10 @@
 use clap::ValueEnum;
 use std::path::PathBuf;
+use strum_macros::Display;
 
 const T_CYCLE_LENGTH: f64 = 1.0 / 3500000.0;
 
-#[derive(Clone, Debug, Default, ValueEnum)]
+#[derive(Clone, Copy, Debug, Default, Display, Eq, PartialEq, Hash, ValueEnum)]
 pub enum Platform {
     AmstradCPC,
     #[default]
