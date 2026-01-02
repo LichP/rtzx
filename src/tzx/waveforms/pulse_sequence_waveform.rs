@@ -50,7 +50,7 @@ impl Iterator for PulseSequenceWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_pulse_index < self.pulses.len() {
-            let pulse_sample = self.pulses[self.current_pulse_index].get_next_sample(self.current_pulse_sample_index);
+            let pulse_sample = self.pulses[self.current_pulse_index].next_sample(self.current_pulse_sample_index);
             if pulse_sample.is_some() {
                 self.current_pulse_sample_index += 1;
                 return pulse_sample;
@@ -59,7 +59,7 @@ impl Iterator for PulseSequenceWaveform {
             self.current_pulse_index += 1;
             self.current_pulse_sample_index = 0;
             if self.current_pulse_index < self.pulses.len() {
-                return self.pulses[self.current_pulse_index].get_next_sample(self.current_pulse_sample_index)
+                return self.pulses[self.current_pulse_index].next_sample(self.current_pulse_sample_index)
             }
         }
         return None;

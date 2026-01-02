@@ -27,13 +27,13 @@ impl Pulse {
         Duration::from_secs_f64(self.len() as f64 / self.config.sample_rate as f64)
     }
 
-    pub fn get_sample(&self) -> f32 {
+    pub fn sample(&self) -> f32 {
         return if self.high { 1.0f32 } else { -1.0f32 }
     }
 
-    pub fn get_next_sample(&self, index: u32) -> Option<f32> {
+    pub fn next_sample(&self, index: u32) -> Option<f32> {
         if index < self.len() {
-            return Some(self.get_sample());
+            return Some(self.sample());
         }
         return None;
     }

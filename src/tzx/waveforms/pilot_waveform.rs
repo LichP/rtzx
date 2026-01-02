@@ -48,7 +48,7 @@ impl Iterator for PilotWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_pulse_index < self.length_tone as u32 {
-            let pulse_sample = self.current_pulse.get_next_sample(self.current_pulse_sample_index);
+            let pulse_sample = self.current_pulse.next_sample(self.current_pulse_sample_index);
             if pulse_sample.is_some() {
                 self.current_pulse_sample_index += 1;
                 return pulse_sample;

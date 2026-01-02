@@ -59,7 +59,7 @@ impl Iterator for DirectWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.has_data_remaining() {
-            let pulse_sample: Option<Self::Item> = self.current_pulse.get_next_sample(self.current_pulse_sample_index as u32);
+            let pulse_sample: Option<Self::Item> = self.current_pulse.next_sample(self.current_pulse_sample_index as u32);
             if pulse_sample.is_some() {
                 self.current_pulse_sample_index += 1;
                 return pulse_sample;

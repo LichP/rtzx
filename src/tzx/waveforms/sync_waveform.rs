@@ -44,7 +44,7 @@ impl Iterator for SyncWaveform {
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.is_first_pulse {
-            let pulse_sample = self.pulse_first.get_next_sample(self.current_pulse_sample_index);
+            let pulse_sample = self.pulse_first.next_sample(self.current_pulse_sample_index);
             if pulse_sample.is_some() {
                 self.current_pulse_sample_index += 1;
                 return pulse_sample;
@@ -53,7 +53,7 @@ impl Iterator for SyncWaveform {
             self.is_first_pulse = false;
             self.current_pulse_sample_index = 0;
         }
-        let pulse_sample = self.pulse_second.get_next_sample(self.current_pulse_sample_index);
+        let pulse_sample = self.pulse_second.next_sample(self.current_pulse_sample_index);
         self.current_pulse_sample_index += 1;
         return pulse_sample;
     }
