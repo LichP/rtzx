@@ -4,6 +4,9 @@ use binrw::{
     BinResult,
     Error
 };
+
+use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::io::Cursor;
 use std::ops::Range;
 use std::sync::{Arc, OnceLock};
@@ -16,9 +19,23 @@ use crate::tzx::tap::{
     Payload,
 };
 
+
+#[derive(Copy, Clone, Debug, Default, Eq, PartialEq, Hash)]
+pub struct BitCounts {
+    pub total: usize,
+    pub ones: usize,
+    pub zeros: usize,
+}
+
+impl fmt::Display for BitCounts {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "0 + 1: {} + {} = {}", self.zeros, self.ones, self.total)
+    }
+}
+
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[br(import(used_bits: u8))]
 pub struct DataPayload {
     #[br(calc = used_bits)]
@@ -35,11 +52,11 @@ pub struct DataPayload {
     cached_bit_counts: OnceLock<BitCounts>,
 }
 
-#[derive(Copy, Clone)]
-pub struct BitCounts {
-    pub total: usize,
-    pub ones: usize,
-    pub zeros: usize,
+impl Hash for DataPayload {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.data.hash(state);
+        self.used_bits.hash(state);
+    }
 }
 
 impl DataPayload {
@@ -115,6 +132,17 @@ impl DataPayload {
     pub fn total_bits(&self) -> usize { (self.data.len() - 1) * 8 + self.used_bits as usize }
 }
 
+impl Default for DataPayload {
+    fn default() -> Self { DataPayload::new(0, 0, Arc::new(Vec::new())) }
+}
+
+impl fmt::Display for DataPayload {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "DataPayload: {} bytes (used_bits: {}; total_bits: {})", self.data.len(), self.used_bits, self.total_bits())
+    }
+}
+
+#[derive(Clone, Debug, Hash)]
 pub struct DataPayloadWithPosition {
     pub payload: DataPayload,
     pub current_byte_index: usize,
@@ -129,6 +157,12 @@ impl DataPayloadWithPosition {
     pub fn current_row_end(&self) -> usize { if self.current_row_address() + 16 < self.len() { self.current_row_address() + 16 } else { self.len() }}
 
     pub fn current_row_bytes(&self) -> &[u8] { &self.payload.data[self.current_row_address()..self.current_row_end()] }
+}
+
+impl fmt::Display for DataPayloadWithPosition {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "DataPayloadWithPosition: {} bytes (used_bits: {}; total_bits: {}; current: {}.{})", self.payload.len(), self.payload.used_bits, self.payload.total_bits(), self.current_byte_index, self.current_bit_index)
+    }
 }
 
 fn to_box_dyn<T>(block_result: BinResult<T>) -> Result<Box<dyn Payload>, Error>
