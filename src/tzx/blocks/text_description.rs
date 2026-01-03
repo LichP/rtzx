@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TextDescription {
     length: u8,
     #[br(count = length)]
@@ -33,7 +33,7 @@ impl Block for TextDescription {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MessageBlock {
     display_for_secs: u8,
     length: u8,

@@ -22,8 +22,9 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Default, Display, Debug, Eq, PartialEq, Hash)]
 pub enum SymbolPolarity {
+    #[default]
     Opposite = 0,
     Same = 1,
     ForceLow = 2,
@@ -43,13 +44,17 @@ impl SymbolPolarity {
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 #[br(import(max_pulses: u8))]
 pub struct SymbolDefinition {
     // This is the flags field in the spec, potentially other bits could be used for other flags in future?
     pub polarity: SymbolPolarity,
     #[br(count = max_pulses)]
     pub pulses: Vec<u16>,
+}
+
+impl SymbolDefinition {
+    pub fn new() -> Self { SymbolDefinition::default() }
 }
 
 impl fmt::Display for SymbolDefinition {
@@ -77,10 +82,14 @@ impl fmt::Display for SymbolDefinitionVecDisplay {
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, Default, Hash)]
 pub struct PilotRLE {
     symbol: u8,
     repetitions: u16,
+}
+
+impl PilotRLE {
+    pub fn new(symbol: u8, repetitions: u16) -> Self { PilotRLE { symbol, repetitions } }
 }
 
 impl fmt::Display for PilotRLE {
@@ -109,7 +118,7 @@ impl fmt::Display for PilotRLEVecDisplay {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[br(import())]
 pub struct GeneralizedDataBlock {
     length: u32,    // Block length (without these four bytes)
@@ -145,8 +154,6 @@ pub struct GeneralizedDataBlock {
     #[bw(map = |arc: &Arc<Vec<u8>>| &**arc)]
     data: Arc<Vec<u8>>,                     // Data stream
 }
-
-
 
 impl fmt::Display for GeneralizedDataBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

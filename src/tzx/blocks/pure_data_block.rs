@@ -19,7 +19,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PureDataBlock {
     length_pulse_zero: u16,
     length_pulse_one: u16,

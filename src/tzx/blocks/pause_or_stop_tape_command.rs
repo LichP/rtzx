@@ -16,7 +16,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PauseOrStopTapeCommand {
     pause: u16,
 }
@@ -44,7 +44,7 @@ impl Block for PauseOrStopTapeCommand {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StopTapeIf48K {
     pub length: u32,
     #[br(count = length)]

@@ -21,7 +21,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct TurboSpeedDataBlock {
     length_pulse_pilot: u16,
     length_pulse_sync_first: u16,

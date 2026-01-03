@@ -6,7 +6,7 @@ use strum_macros::Display;
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, PartialEq, Hash)]
 pub enum BlockType {
     StandardSpeedDataBlock = 0x10,
     TurboSpeedDataBlock = 0x11,

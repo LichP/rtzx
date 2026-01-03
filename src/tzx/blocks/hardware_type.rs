@@ -49,7 +49,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HardwareTypeBlock {
     entry_count: u8,
     #[br(count = entry_count)]
@@ -80,7 +80,7 @@ impl Block for HardwareTypeBlock {
 
 #[derive(BinRead)]
 #[brw(little)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, PartialEq, Hash)]
 pub enum HardwareType {
     #[br(magic = 0u8)]
     #[strum(to_string = "Computer::{0}")]
@@ -246,7 +246,7 @@ pub enum HardwareInformation {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct HardwareTypeBlockEntry {
     hardware_type: RecoveryEnum<HardwareType, u8>,
     #[br(if(match hardware_type { RecoveryEnum::Known(_) => false, _ => true }, 0))]

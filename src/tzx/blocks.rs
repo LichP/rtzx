@@ -83,7 +83,7 @@ impl Clone for Box<dyn Block> {
     }
 }
 
-#[derive(BinRead, Clone)]
+#[derive(BinRead, Clone, Debug)]
 #[br(little)]
 #[br(import(block_type_id: u8))]
 pub struct UndefinedBlockTypeBlock {
@@ -110,7 +110,7 @@ impl Block for UndefinedBlockTypeBlock {
     }
 }
 
-#[derive(BinRead, Clone)]
+#[derive(BinRead, Clone, Debug)]
 #[br(little)]
 #[br(import(block_type: BlockType))]
 pub struct UnsupportedBlockTypeBlock {
@@ -137,7 +137,7 @@ impl Block for UnsupportedBlockTypeBlock {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
 #[binrw]
 #[brw(little, magic = b"XTape!\x1A")]
 pub struct GlueBlock {

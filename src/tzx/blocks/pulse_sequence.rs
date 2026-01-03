@@ -15,7 +15,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PulseSequence {
     length: u8,
     #[br(count = length)]

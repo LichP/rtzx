@@ -15,7 +15,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PureTone {
     length_pulse: u16,
     length_tone: u16,

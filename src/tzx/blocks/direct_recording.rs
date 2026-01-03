@@ -18,7 +18,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DirectRecording {
     length_sample: u16,
     pause: u16,

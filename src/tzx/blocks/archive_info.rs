@@ -9,7 +9,7 @@ use crate::tzx::{ExtendedDisplayCollector, RecoveryEnum};
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ArchiveInfo {
     length: u16,
     #[br(if(length > 0, 0))]
@@ -42,7 +42,7 @@ impl Block for ArchiveInfo {
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, Eq, PartialEq, Hash)]
 pub enum ArchiveInfoEntryType {
     FullTitle = 0x00,
     SoftwareHousePublisher = 0x01,

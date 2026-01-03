@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Copy, Debug)]
 pub struct EmulationInfo {
     flags: u16,
     refresh_delay: u8,

@@ -9,7 +9,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SelectBlock {
     length: u16,
     #[br(if(length != 0, 0))]
@@ -42,7 +42,7 @@ impl Block for SelectBlock {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SelectBlockEntry {
     offset: i16,
     length: u8,

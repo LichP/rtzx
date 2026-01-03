@@ -11,7 +11,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SetSignalLevel {
     pub length: u32,
     #[br(if(length != 0, 1))]

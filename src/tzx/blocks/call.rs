@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CallSequence {
     length: u16,
     #[br(count = length)]
@@ -32,7 +32,7 @@ impl Block for CallSequence {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ReturnFromSequence {
 }
 

@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LoopStart {
     repititions: u16,
 }
@@ -30,7 +30,7 @@ impl Block for LoopStart {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct LoopEnd {
 }
 

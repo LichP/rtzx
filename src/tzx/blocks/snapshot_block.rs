@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SnapshotBlock {
     format: u8,
     #[br(parse_with = binrw::helpers::read_u24)]

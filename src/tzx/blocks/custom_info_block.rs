@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct CustomInfoBlock {
     #[br(count = 16)]
     id: Vec<u8>,
@@ -39,7 +39,7 @@ impl Block for CustomInfoBlock {
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct InstructionsBlock {
     block_length: u32,
     #[br(count = if block_length == 0x7274736e { 11 } else { 0 })]

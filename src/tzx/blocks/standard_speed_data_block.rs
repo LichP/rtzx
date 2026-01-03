@@ -21,7 +21,7 @@ use crate::tzx::{
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StandardSpeedDataBlock {
     pause: u16,
     #[bw(try_calc(u16::try_from(data.len())))]

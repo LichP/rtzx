@@ -7,7 +7,7 @@ use crate::tzx::blocks::BlockType;
 
 #[binrw]
 #[brw(little)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct JumpToBlock {
     offset: i16,
 }
@@ -20,7 +20,7 @@ impl fmt::Display for JumpToBlock {
 
 impl Block for JumpToBlock {
     fn r#type(&self) -> BlockType {
-        return BlockType::GroupStart;
+        return BlockType::JumpToBlock;
     }
 
     fn clone_box(&self) -> Box<dyn Block> {
