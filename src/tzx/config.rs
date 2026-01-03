@@ -4,7 +4,7 @@ use std::time::Duration;
 
 use crate::tzx::Platform;
 
-#[derive(Clone, Debug, Builder)]
+#[derive(Clone, Debug, Builder, Default)]
 pub struct Config {
     #[builder(default = Platform::ZXSpectrum)]
     pub platform: Platform,
