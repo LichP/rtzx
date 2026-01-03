@@ -5,7 +5,7 @@ use strum_macros::Display;
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, Eq, PartialEq, Hash)]
 pub enum ComputerType {
     ZXSpectrum16k = 0x00,
     ZXSpectrum48kPlus = 0x01,

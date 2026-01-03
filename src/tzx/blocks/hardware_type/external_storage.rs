@@ -5,7 +5,7 @@ use strum_macros::Display;
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, Eq, PartialEq, Hash)]
 pub enum ExternalStorageType {
     ZXMicrodrive = 0x00,
     OpusDiscovery = 0x01,
