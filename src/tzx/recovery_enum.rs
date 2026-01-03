@@ -8,7 +8,7 @@ use std::io::{
     Seek,
 };
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Hash)]
 pub enum RecoveryEnum<TKnown, TUnknown> {
     Known(TKnown),
     Unknown(TUnknown),
