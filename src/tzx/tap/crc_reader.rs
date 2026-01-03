@@ -14,6 +14,7 @@ const CRC16_CCITT_CPC: Algorithm<u16> = Algorithm {
 
 const CRC16: Crc<u16> = Crc::<u16>::new(&CRC16_CCITT_CPC);
 
+#[derive(Clone, Debug)]
 pub struct CrcPagedRW<RW> {
     inner: RW,
     page_size: usize,

@@ -11,7 +11,7 @@ use crate::tzx::tap::Payload;
 
 #[binrw]
 #[brw(little)]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct CPCHeader {
     #[br(count = 16)]
     filename: Vec<u8>,
@@ -34,6 +34,39 @@ impl CPCHeader {
     fn filename(&self) -> Cow<'_, str> {
         let end = self.filename.iter().position(|&b| b == 0).unwrap_or(self.filename.len());
         return String::from_utf8_lossy(&self.filename[..end]);
+    }
+}
+
+impl CPCHeader {
+    pub fn new(
+        filename: &str,
+        block_number: u8,
+        last_block: bool,
+        file_type: u8,
+        data_length: u16,
+        data_location: u16,
+        first_block: bool,
+        logical_length: u16,
+        entry_address: u16
+    ) -> Self {
+        CPCHeader {
+            filename: filename.as_bytes().to_vec(),
+            block_number,
+            last_block,
+            file_type,
+            data_length,
+            data_location,
+            first_block,
+            logical_length,
+            entry_address,
+            padding: [0; 228],
+        }
+    }
+}
+
+impl Default for CPCHeader {
+    fn default() -> Self {
+        CPCHeader::new("", 1, true, 1, 0, 0, true, 0, 0)
     }
 }
 
@@ -68,10 +101,18 @@ impl fmt::Display for CPCHeader {
 #[binrw]
 #[brw(little)]
 #[br(import(payload_len: usize))]
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub struct CPCData {
     #[br(count = payload_len)]
     pub data: Vec<u8>,
+}
+
+impl CPCData {
+    pub fn new(data: Vec<u8>) -> Self { CPCData { data } }
+}
+
+impl Default for CPCData {
+    fn default() -> Self { CPCData::new(Vec::new()) }
 }
 
 impl Payload for CPCData {
@@ -92,8 +133,9 @@ impl fmt::Display for CPCData {
 
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug)]
+#[derive(Clone, Copy, Display, Debug, Default, Eq, PartialEq, Hash)]
 pub enum CPCSync {
+    #[default]
     CPCHeader = 0x2c,
     CPCData = 0x16,
 }
