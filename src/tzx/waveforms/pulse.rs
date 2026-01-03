@@ -1,13 +1,32 @@
+use std::fmt;
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use std::time::Duration;
 
 use crate::tzx::Config;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Pulse {
     pub config: Arc<Config>,
     pub length: u16,
     pub high: bool,
+}
+
+impl PartialEq for Pulse {
+    fn eq(&self, other: &Self) -> bool { self.length == other.length && self.high == other.high }
+}
+
+impl Eq for Pulse {}
+
+impl Hash for Pulse {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.length.hash(state);
+        self.high.hash(state);
+    }
+}
+
+impl Default for Pulse {
+    fn default() -> Self { Pulse::new(Arc::new(Config::default()), 0, true)}
 }
 
 impl Pulse {
@@ -36,5 +55,11 @@ impl Pulse {
             return Some(self.sample());
         }
         return None;
+    }
+}
+
+impl fmt::Display for Pulse {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}{}", self.length, if self.high { 'h' } else { 'l' })
     }
 }

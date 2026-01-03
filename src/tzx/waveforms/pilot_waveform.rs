@@ -13,8 +13,7 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
-#[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PilotWaveform {
     config: Arc<Config>,
     length_pulse: u16,

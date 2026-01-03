@@ -16,7 +16,7 @@ use crate::tzx::{
 };
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DirectWaveform {
     config: Arc<Config>,
     length_sample: u16,

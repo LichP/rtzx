@@ -12,7 +12,7 @@ use crate::tzx::{
     waveforms::Waveform,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct EmptyWaveform {
     config: Arc<Config>,
 }

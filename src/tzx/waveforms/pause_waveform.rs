@@ -7,14 +7,16 @@ use rodio::{
 use std::fmt;
 use std::sync::Arc;
 use std::time::Duration;
+use strum_macros::Display;
 
 use crate::tzx::{
     Config,
     waveforms::Waveform,
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Default, Display, Eq, PartialEq, Hash)]
 pub enum PauseType {
+    #[default]
     Zero,
     Low,
     High,
@@ -32,7 +34,7 @@ impl PauseType {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PauseWaveform {
     config: Arc<Config>,
     length: u16,

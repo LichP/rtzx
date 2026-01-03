@@ -14,7 +14,7 @@ use crate::tzx::{
 };
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct PulseSequenceWaveform {
     config: Arc<Config>,
     total_length: usize,

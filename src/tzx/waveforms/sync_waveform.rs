@@ -14,7 +14,7 @@ use crate::tzx::{
 };
 
 #[allow(dead_code)]
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct SyncWaveform {
     config: Arc<Config>,
     length_pulse_sync_first: u16,

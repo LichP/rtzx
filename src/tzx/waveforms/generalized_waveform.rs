@@ -17,7 +17,7 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct GeneralizedPulseIterator {
     symbols: Arc<Vec<SymbolDefinition>>,
     payload: DataPayload,
@@ -109,6 +109,7 @@ impl Iterator for GeneralizedPulseIterator {
     }
 }
 
+#[derive(Debug)]
 pub struct GeneralizedWaveform {
     config: Arc<Config>,
     symbols: Arc<Vec<SymbolDefinition>>,

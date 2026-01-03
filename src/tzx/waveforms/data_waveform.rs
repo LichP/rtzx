@@ -15,7 +15,7 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataPulseIterator {
     length_pulse_zero: u16,
     length_pulse_one: u16,
@@ -70,7 +70,7 @@ impl DataPulseIterator {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct DataWaveform {
     config: Arc<Config>,
     length_pulse_zero: u16,
