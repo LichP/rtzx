@@ -83,6 +83,12 @@ impl Clone for Box<dyn Block> {
     }
 }
 
+impl fmt::Debug for Box<dyn Block> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{:?}", self)
+    }
+}
+
 #[derive(BinRead, Clone, Debug)]
 #[br(little)]
 #[br(import(block_type_id: u8))]
