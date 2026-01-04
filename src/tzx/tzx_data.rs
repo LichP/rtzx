@@ -19,6 +19,7 @@ use crate::tzx::blocks::{
     BlockType,
 };
 
+#[derive(Clone, Debug)]
 pub struct TzxData {
     pub header: Header,
     pub blocks: Vec<Box<dyn Block + 'static>>
