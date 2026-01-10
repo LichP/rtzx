@@ -2,16 +2,13 @@ use clap::Parser;
 use std::fs::File;
 use std::io;
 
-use crate::tzx::TzxData;
-use crate::ui::commands::{
+use rtzx::TzxData;
+use rtzx::ui::commands::{
     Commands,
     convert::run_convert,
     inspect::run_inspect,
     play::run_play,
 };
-
-pub mod tzx;
-pub mod ui;
 
 /// rtzx: A utility for interacting with TZX / CDT tape files.
 #[derive(Parser)]
