@@ -1,7 +1,14 @@
 [package]
 name = "rtzx"
 version = "0.3.1"
+authors = ["Phil Stewart"]
 edition = "2024"
+description = "TZX / CDT tape file parsing and conversion / playback"
+readme = "README.md"
+repository = "https://github.com/LichP/rtzx"
+license = "MIT"
+keywords = ["tzx", "cdt", "zx", "spectrum", "amstrad", "cpc", "tape"]
+categories = ["command-line-utilities", "parser-implementations"]
 
 [dependencies]
 binrw = "0.15.0"
