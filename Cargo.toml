@@ -1,6 +1,6 @@
 [package]
 name = "rtzx"
-version = "0.3.1"
+version = "0.4.0"
 authors = ["Phil Stewart"]
 edition = "2024"
 description = "TZX / CDT tape file parsing and conversion / playback"
