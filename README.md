@@ -1,7 +1,7 @@
 rtzx
 ====
 
-`rtzx` is a command-line utility for interacting with [ZX Spectrum](https://en.wikipedia.org/wiki/ZX_Spectrum) `.tzx` and [Amstrad CPC](https://en.wikipedia.org/wiki/Amstrad_CPC) `.cdt` tape data files. It supports inspecting `.tzx`/`.cdt` files, converting to wav, and real time playback with a nice user interface for loading tape programs on a real Spectrum or CPC computer. Rtzx is written in [Rust](https://rust-lang.org/).
+`rtzx` is a command-line utility for interacting with [ZX Spectrum](https://en.wikipedia.org/wiki/ZX_Spectrum) `.tzx` and [Amstrad CPC](https://en.wikipedia.org/wiki/Amstrad_CPC) `.cdt` tape data files. It supports inspecting `.tzx`/`.cdt` files, converting to wav, and real time playback with a nice user interface for loading tape programs on a real Spectrum or CPC computer. `rtzx` is written in [Rust](https://rust-lang.org/).
 
 Given the relative difficulty of transferring data to floppy disk in this day and age, tape playback is one of the easiest ways of loading programs on actual hardware, requiring only a suitable audio cable to connect your PC's audio output to the tape input of the 8-bit computer.
 
@@ -23,15 +23,17 @@ To inspect a file, use the `inspect` command:
 rtzx inspect path/to/my-tzx-file.tzx
 ```
 
-Inspecting a file causes it to be fully parsed, but does not prepare waveforms, so no timing information is shown other than the lengths of pauses and other durations defined directly by blocks.
+Inspecting a file causes it to be fully parsed, but does not prepare waveforms by default, so no timing information is shown other than the lengths of pauses and other durations defined directly by blocks.
 
 ### `convert`
 
-To convert a file to wav, you also need to specify an output file:
+To convert a file to wav, you may specify an output file with the `--output` / `-o` option:
 
 ```sh
 rtzx convert -o my-cdt-as-wav.wav path/to/my-cdt-file.cdt
 ```
+
+If `--output` / `-o` is not specified, output will be to a wav file with the same name and path as the tzx / cdt file with the filename extension subsituted to `.wav`.
 
 Outputted wav files are single channel using a 44.1k sample rate by default. An alternative sample rate can be specified using the `--sample-rate` / `-s` option, and timings can be adjusted with `--playback-duration-percent` / `-d` as per the `play` command.
 
@@ -77,7 +79,7 @@ The [TZX file format](https://worldofspectrum.net/TZXformat.html) was created fo
 
 At present `rtzx` supports two platforms: the ZX Spectrum and the Amstrad CPC.
 
-The platform is determined automatically from the file name (`.tzx` => ZX Spectrum, `.cdt` => Amstrad CPC), but can be overruled with the `--platform` / `-p` option, although this no longer has any affect on playback or vonversion as of `rtzx` version 0.3.0:
+The platform is determined automatically from the file name (`.tzx` => ZX Spectrum, `.cdt` => Amstrad CPC), but can be overruled with the `--platform` / `-p` option, although this no longer has any affect on playback or conversion as of `rtzx` version 0.3.0:
 
 ```sh
 rtzx play -p amstrad-cpc path/to/tzx-file-with-cpc-timings.tzx
@@ -104,7 +106,7 @@ The following table lists the current status of block type support in `rtzx`:
 | 0x16 | C64 ROM Type Data Block    | Yes (as unsupported) | No           |
 | 0x17 | C64 Turbo Tape Data Block  | Yes (as unsupported) | No           |
 | 0x18 | CSW Recording              | Yes (as unsupported) | No           |
-| 0x19 | Generalized Data Block     | Yes (as unsupported) | No           |
+| 0x19 | Generalized Data Block     | Yes (v0.4.0+)        | Yes (Experimental as of 0.4.0) |
 | 0x20 | Pause Or Stop Tape Command | Yes                  | Yes          |
 | 0x21 | Group Start                | Yes                  | Yes          |
 | 0x22 | Group End                  | Yes                  | Yes          |
@@ -128,7 +130,7 @@ The following table lists the current status of block type support in `rtzx`:
 
 ## Playback compatability
 
-So far all of my testing has been done with a real Amstrad CPC, where I have successfully loaded a number of games from CDTs using Turbo Speed Data Blocks. I've had success with games using Direct Recording blocks and more esoteric loaders modeled with Pure Tone, Pulse Sequences, and Pure Data Blocks. I've not yet encountered any CDT files using CSW Recording blocks, or the more complicated logic of loops, call sequences, etc.
+So far all of my testing has been done with a real Amstrad CPC, where I have successfully loaded a number of games from CDTs using Turbo Speed Data Blocks. I've had success with games using Direct Recording blocks and more esoteric loaders modeled with Pure Tone, Pulse Sequences, and Pure Data Blocks. I've not yet encountered any CDT files using CSW Recording blocks, or the more complicated logic of loops, call sequences, etc. I have one example of a CDT using a Generalized Data Block, which does work (as of v0.4.0), however Generalized Data Blocks are quite complex so the implementation is still considered experimental.
 
 While I've tested `rtzx` with a some TZX files and verified that files parse and Standard Speed Data Blocks generate output, it is completely untested with a real ZX Spectrum, as I don't have access to one of those :-( . Any feedback from ZX Spectrum users would be most welcome!
 
@@ -146,7 +148,7 @@ cargo run -- play path/to/my-cdt-file.cdt
 
 ## Contact and Contributing
 
-`rtzx` is very new and will have bugs, so please do open an issue if you encounter any problems with it! For playback issues I'm particularly interested in and TZX / CDT files that are known to work when using other software.
+`rtzx` is new and will have bugs, so please do open an issue if you encounter any problems with it! For playback issues I'm particularly interested in and TZX / CDT files that are known to work when using other software.
 
 If you'd like to contribute code please feel free to create an issue for a bug or feature, fork and open a pull request.
 
