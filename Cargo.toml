@@ -7,7 +7,7 @@ description = "TZX / CDT tape file parsing and conversion / playback"
 readme = "README.md"
 repository = "https://github.com/LichP/rtzx"
 license = "MIT"
-keywords = ["tzx", "cdt", "zx", "spectrum", "amstrad", "cpc", "tape"]
+keywords = ["tzx", "cdt", "spectrum", "amstrad", "cpc"]
 categories = ["command-line-utilities", "parser-implementations"]
 
 [dependencies]
