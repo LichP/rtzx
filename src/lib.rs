@@ -7,9 +7,8 @@
 //! Example:
 //!
 //! ```
-//! // Open the path in read-only mode, returns `io::Result<File>`
 //! let file = match File::open("some-zx-spectrum-tape.tzx") {
-//!     Err(why) => panic!("Couldn't open {}: {}", display, why),
+//!     Err(why) => panic!("Couldn't open file: {}", why),
 //!     Ok(file) => file,
 //! };
 //! let tzx_data = TzxData::parse_from(file);
