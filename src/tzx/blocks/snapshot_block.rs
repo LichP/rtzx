@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A deprecated [Snapshot block](https://worldofspectrum.net/TZXformat.html#SNAPSHOT).
+/// Parsed, but unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

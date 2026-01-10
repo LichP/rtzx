@@ -13,6 +13,13 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
+
+/// A waveform for encoding a pilot tone as used by [StandardSpeedDataBlock](crate::tzx::blocks::StandardSpeedDataBlock),
+/// [TurboSpeedDataBlock](crate::tzx::blocks::TurboSpeedDataBlock), and [PureTone](crate::tzx::blocks::PureTone).
+///
+/// Waveform consists of a sequence of `length_tone` pulses with a fixed length of `length_pulse`, alternating between
+/// high and low. The tone length can be odd, in which case the next waveform will start with opposite polarity to the
+/// polarity of the first pulse in the tone.
 #[derive(Clone, Debug)]
 pub struct PilotWaveform {
     config: Arc<Config>,

@@ -5,6 +5,7 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+// A [Text description](https://worldofspectrum.net/TZXformat.html#TEXTDESCR) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -31,6 +32,9 @@ impl Block for TextDescription {
     }
 }
 
+/// A [Message block](https://worldofspectrum.net/features/TZXformat.html#MSGBLOCK).
+/// Parsed, but unsupported beyond display of the message during playback / inspection. The display time is shown
+/// but not respected.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

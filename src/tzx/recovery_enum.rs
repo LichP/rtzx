@@ -8,6 +8,7 @@ use std::io::{
     Seek,
 };
 
+/// Facilitates parsing data of type `TUnknown` to a repr enum of type `TKnown` where the data may correspond to either a `TKnown` enum value or unknown / undefined value.
 #[derive(Clone, Copy, Debug, PartialEq, Hash)]
 pub enum RecoveryEnum<TKnown, TUnknown> {
     Known(TKnown),

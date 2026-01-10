@@ -1,13 +1,18 @@
+//! TZX header.
+
 use binrw::{
     binrw,    // #[binrw] attribute
 };
 use std::fmt;
 
+/// Represents a TZX/CDT file header.
 #[binrw]
 #[brw(little, magic = b"ZXTape!\x1A")]
 #[derive(Clone, Debug)]
 pub struct Header {
+    /// The major version of the TZX specification used to encode the subsequent data.
     major: u8,
+    /// The major version of the TZX specification used to encode the subsequent data.
     minor: u8
 }
 

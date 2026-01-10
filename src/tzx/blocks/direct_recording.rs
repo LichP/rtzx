@@ -16,6 +16,7 @@ use crate::tzx::{
     },
 };
 
+/// A [Direct recording](https://worldofspectrum.net/TZXformat.html#DIRECTREC) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

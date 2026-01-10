@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A [Call sequence](https://worldofspectrum.net/TZXformat.html#CALLSEQ) block.
+/// Parsed, but unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -30,6 +32,8 @@ impl Block for CallSequence {
     }
 }
 
+/// A [Return from sequence](https://worldofspectrum.net/TZXformat.html#RETURNSEQ) block.
+/// Parsed, but not supported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

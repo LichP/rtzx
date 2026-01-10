@@ -15,6 +15,12 @@ use crate::tzx::{
     waveforms::{Pulse,Waveform}
 };
 
+/// A waveform for direct recording encoding as used by [DirectRecording](crate::tzx::blocks::DirectRecording).
+///
+/// Data is encoded as a sequence of fixed width logical pulses, with each bit in the data payload indicating a
+/// high pulse with a one, and a low pulse with a zero. Sequences of multiple ones or zeros will result in longer
+/// physical pulses, e.g. 11100101 would encode a triple-length high pulse, followed by a double-length low pulse,
+/// followed by three single-length pulses.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct DirectWaveform {

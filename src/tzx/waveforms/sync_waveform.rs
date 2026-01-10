@@ -13,6 +13,11 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
+/// A waveform for encoding sync pulses as used by [StandardSpeedDataBlock](crate::tzx::blocks::StandardSpeedDataBlock)
+/// and [TurboSpeedDataBlock](crate::tzx::blocks::TurboSpeedDataBlock).
+///
+/// Sync pulses are usually two short pulses that follow the longer pulses of the pilot tone to indicate the end of
+/// the pilot.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct SyncWaveform {

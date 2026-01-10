@@ -14,6 +14,9 @@ use crate::tzx::{
     waveforms::Waveform,
 };
 
+/// Pause types are intended to model different pause strategies. Currently Zero and
+/// StartLow are used, further work is needed on controlling pause strategy to ensure
+/// waveforms are correctly modelled for conversion and playback on actual hardware.
 #[derive(Clone, Debug, Default, Display, Eq, PartialEq, Hash)]
 pub enum PauseType {
     #[default]
@@ -34,6 +37,12 @@ impl PauseType {
     }
 }
 
+/// A waveform for pauses, as used by [PauseOrStopTapeCommand](crate::tzx::blocks::PauseOrStopTapeCommand) and all
+/// data and direct recording block types.
+///
+/// Pauses are always measured in milliseconds and are therefore unaffected by
+/// [Config::playback_duration_percent](crate::Config::playback_duration_percent), which only affects pulse
+/// lengths measured in t cycles.
 #[derive(Clone, Debug)]
 pub struct PauseWaveform {
     config: Arc<Config>,

@@ -19,6 +19,10 @@ use crate::tzx::{
     },
 };
 
+/// A [Turbo Speed Data Block](https://worldofspectrum.net/TZXformat.html#TURBOSPEED).
+///
+/// This is the most commonly used block type in CDT files, and is also commonly used in TZX files for programs
+/// using non-default loaders.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

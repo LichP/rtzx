@@ -19,19 +19,24 @@ use crate::tzx::{
     },
 };
 
-
+/// Represents the desired polarity state of the first pulse in a symbol.
 #[binrw]
 #[brw(little, repr = u8)]
 #[derive(Clone, Copy, Default, Display, Debug, Eq, PartialEq, Hash)]
 pub enum SymbolPolarity {
+    /// The first pulse should be the opposite polarity of the preceding pulse.
     #[default]
     Opposite = 0,
+    /// The first pulse should be the same polarity as the preceding pulse.
     Same = 1,
+    /// The first pulse should always be low.
     ForceLow = 2,
+    /// The first pulse should always be high.
     ForceHigh = 3,
 }
 
 impl SymbolPolarity {
+    /// Returns the polarity to use for the next pulse when starting a new symbol given the polarity of the current pulse.
     pub fn next_polarity(&self, current_polarity: bool) -> bool {
         match self {
             SymbolPolarity::Opposite => !current_polarity,
@@ -42,13 +47,16 @@ impl SymbolPolarity {
     }
 }
 
+/// A symbol definition.
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Default)]
 #[br(import(max_pulses: u8))]
 pub struct SymbolDefinition {
-    // This is the flags field in the spec, potentially other bits could be used for other flags in future?
+    /// The polarity for the first pulse in the symbol.
+    /// This corresponds to the flags field in the spec, potentially other bits could be used for other flags in future?
     pub polarity: SymbolPolarity,
+    /// The lengths of each pulse in the symbol. A length of zero indicates that the symbol has ended.
     #[br(count = max_pulses)]
     pub pulses: Vec<u16>,
 }
@@ -62,6 +70,8 @@ impl fmt::Display for SymbolDefinition {
         write!(f, "[{}, {:?}]", self.polarity, self.pulses)
     }
 }
+
+/// A wrapper struct to facilitate displaying a `Vec<SymbolDefinition>`.
 pub struct SymbolDefinitionVecDisplay(Vec<SymbolDefinition>);
 
 impl fmt::Display for SymbolDefinitionVecDisplay {
@@ -80,11 +90,14 @@ impl fmt::Display for SymbolDefinitionVecDisplay {
     }
 }
 
+// An entry in the pilot sequence run-length encoding.
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Copy, Default, Hash)]
 pub struct PilotRLE {
+    /// A key identifying an entry in the pilot symbol table.
     symbol: u8,
+    /// The number of times the symbol should be repeated.
     repetitions: u16,
 }
 
@@ -98,6 +111,7 @@ impl fmt::Display for PilotRLE {
     }
 }
 
+/// A wrapper struct to facilitate displaying an `Arc<Vec<PilotRLE>>`.
 pub struct PilotRLEVecDisplay(Arc<Vec<PilotRLE>>);
 
 impl fmt::Display for PilotRLEVecDisplay {
@@ -116,6 +130,13 @@ impl fmt::Display for PilotRLEVecDisplay {
     }
 }
 
+/// A [Generalized Data Block](https://worldofspectrum.net/TZXformat.html#GENDATA).
+///
+/// This is a somewhat complex block encoding consisting of symbol definition tables for pilot and or data streams,
+/// an optional run-length encoding of the pilot, and an optional data stream comprising a series of chunks of
+/// 1 to 8 bits with each chunk representing a key to look up a data stream symbol.
+///
+/// Generalized data block support is currently considered experimental.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

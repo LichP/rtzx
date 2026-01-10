@@ -17,6 +17,7 @@ use crate::tzx::{
     },
 };
 
+/// A [Pure Data Block](https://worldofspectrum.net/features/TZXformat.html#PUREDATA).
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

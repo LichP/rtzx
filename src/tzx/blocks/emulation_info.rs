@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A deprecated [Emulation info](https://worldofspectrum.net/TZXformat.html#EMUINFO) block.
+/// Parsed, but unsupported other than for presentation of encoded data.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Copy, Debug)]

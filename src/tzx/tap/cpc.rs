@@ -9,6 +9,11 @@ use std::io::Cursor;
 
 use crate::tzx::tap::Payload;
 
+/// A standard Amstrad CPC tape block header.
+///
+/// CPC header blocks are 28 bytes long, and then padded with zeroes to 256 bytes and appended with a two byte checksum
+/// when encoded to tape. The checksum is not included in this struct, it should instead be handled by
+/// [CrcPagedRW](crate::tzx::tap::CrcPagedRW).
 #[binrw]
 #[brw(little)]
 #[derive(Debug, Clone, Hash)]
@@ -98,6 +103,11 @@ impl fmt::Display for CPCHeader {
     }
 }
 
+/// A block of CPC data.
+///
+/// On tape this is padded with zeros to be a multiple of 256 bytes long, and two bytes of checksum are included every 256 bytes.
+/// Checksum values are not included in the data here, but zero padding is included. Checksums should be handled using
+/// [CrcPagedRW](crate::tzx::tap::CrcPagedRW).
 #[binrw]
 #[brw(little)]
 #[br(import(payload_len: usize))]
@@ -131,6 +141,7 @@ impl fmt::Display for CPCData {
     }
 }
 
+/// Sync byte indicating whether a payload contains a CPC header or data .
 #[binrw]
 #[brw(little, repr = u8)]
 #[derive(Clone, Copy, Display, Debug, Default, Eq, PartialEq, Hash)]

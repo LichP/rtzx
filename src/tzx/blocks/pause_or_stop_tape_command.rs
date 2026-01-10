@@ -14,6 +14,9 @@ use crate::tzx::{
     },
 };
 
+/// A [Pause or stop tape command](https://worldofspectrum.net/TZXformat.html#PAUSEBLOCK).
+/// At present, the length 0 'stop tape' instruction is not respected (TODO: implement this as an auto-pause
+/// in [Player](crate::tzx::Player)).
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -42,6 +45,9 @@ impl Block for PauseOrStopTapeCommand {
     }
 }
 
+/// A [Stop tape if in 48k mode](https://worldofspectrum.net/TZXformat.html#STOP48K) block.
+/// Parsed, but unsupported. Potentially support for this could be added to [Player](crate::tzx::Player)
+/// using a configuration option.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

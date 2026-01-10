@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A [Loop start](https://worldofspectrum.net/TZXformat.html#LOOPSTART) block.
+/// Parsed, but currently unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -28,6 +30,8 @@ impl Block for LoopStart {
     }
 }
 
+/// A [Loop end](https://worldofspectrum.net/TZXformat.html#LOOPEND) block.
+/// Parsed, but currently unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

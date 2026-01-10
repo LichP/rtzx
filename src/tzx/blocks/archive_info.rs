@@ -7,6 +7,7 @@ use strum_macros::Display;
 use crate::tzx::blocks::{Block, BlockType};
 use crate::tzx::{ExtendedDisplayCollector, RecoveryEnum};
 
+/// An [Archive info](https://worldofspectrum.net/TZXformat.html#ARCHINFO) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

@@ -4,6 +4,8 @@ use binrw::{
 use std::fmt;
 use strum_macros::Display;
 
+/// Represents all [defined TZX block types](https://worldofspectrum.net/TZXformat.html#TZXFORMAT), including
+/// [deprecated blocks](https://worldofspectrum.net/TZXformat.html#DEPRECATED).
 #[binrw]
 #[brw(little, repr = u8)]
 #[derive(Clone, Copy, Display, Debug, PartialEq, Hash)]

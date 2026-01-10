@@ -14,6 +14,11 @@ const CRC16_CCITT_CPC: Algorithm<u16> = Algorithm {
 
 const CRC16: Crc<u16> = Crc::<u16>::new(&CRC16_CCITT_CPC);
 
+/// A reader / writer for handling paged checksums.
+///
+/// This is used when parsing [DataPayload](crate::tzx::data::DataPayload)s to [CPCHeader](crate::tzx::tap::CPCHeader) and
+/// [CPCData](crate::tzx::tap::CPCData) payloads, and will read / write one page of data at a time followed by the relevant
+/// checksum bytes, validating and stripping them when reading, and calculating and inserting them when writing.
 #[derive(Clone, Debug)]
 pub struct CrcPagedRW<RW> {
     inner: RW,

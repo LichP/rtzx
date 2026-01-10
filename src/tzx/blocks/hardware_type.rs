@@ -47,6 +47,8 @@ use crate::tzx::{
     blocks::{Block, BlockType}
 };
 
+/// A [Hardware type](https://worldofspectrum.net/TZXformat.html#HARDTYPE) block.
+/// Parsed, but unsupported other than for presentation of encoded data.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -78,6 +80,7 @@ impl Block for HardwareTypeBlock {
     }
 }
 
+/// The magical nested hardware type enum.
 #[derive(BinRead)]
 #[brw(little)]
 #[derive(Clone, Copy, Display, Debug, PartialEq, Hash)]
@@ -234,6 +237,7 @@ impl BinWrite for HardwareType {
     }
 }
 
+/// Hardware information.
 #[binrw]
 #[brw(little, repr = u8)]
 #[derive(Clone, Copy, Display, Debug)]
@@ -244,6 +248,7 @@ pub enum HardwareInformation {
     DoesntRun = 0x03,
 }
 
+/// A hardware type block entry.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

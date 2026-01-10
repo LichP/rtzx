@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A [Jump to block](https://worldofspectrum.net/TZXformat.html#JUMPBLOCK) block.
+/// Parsed, but currently unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

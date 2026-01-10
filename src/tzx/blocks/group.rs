@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A [Group start](https://worldofspectrum.net/TZXformat.html#GRPSTART) block.
+/// Passively supported, in that it doesn't really do anything.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -31,6 +33,8 @@ impl Block for GroupStart {
     }
 }
 
+/// A [Group end](https://worldofspectrum.net/TZXformat.html#GRPEND) block.
+/// Passively supported, in that it doesn't really do anything.
 #[binrw]
 #[brw(little)]
 #[derive(Clone)]

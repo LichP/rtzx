@@ -5,6 +5,8 @@ use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
 
+/// A [Custom info](https://worldofspectrum.net/TZXformat.html#CUSTOMBLOCK) block.
+/// Parsed, but unsupported other than for presentation of encoded bytes.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
@@ -37,6 +39,9 @@ impl Block for CustomInfoBlock {
     }
 }
 
+/// A badly encoded deprecated instructions block (see [custom info deprecated types](https://worldofspectrum.net/TZXformat.html#CUSTINFODPR)).
+/// This has mainly been implemented for compatability with Kevin Thacker's test CDT which includes it, and on the off-chance
+/// any very old TZX / CDT files actually use it.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

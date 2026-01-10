@@ -7,6 +7,8 @@ use crate::tzx::{
     blocks::{Block, BlockType}
 };
 
+/// A [Select](https://worldofspectrum.net/TZXformat.html#SELBLOCK) block.
+/// Parsed, but currently unsupported.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

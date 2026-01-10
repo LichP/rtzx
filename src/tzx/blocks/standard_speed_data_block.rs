@@ -19,6 +19,11 @@ use crate::tzx::{
     },
 };
 
+/// A [Standard Speed Data Block](https://worldofspectrum.net/features/TZXformat.html#STDSPEED).
+///
+/// This is the default block type for Spectrum loaders, but does also occassionally feature in CDT files.
+/// Waveforms are generated as per [TurboSpeedDataBlock](crate::tzx::blocks::TurboSpeedDataBlock) using
+/// standard Spectrum timings.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

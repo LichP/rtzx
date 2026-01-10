@@ -13,6 +13,7 @@ use crate::tzx::{
     },
 };
 
+/// A [Pure tone](https://worldofspectrum.net/features/TZXformat.html#PURETONE) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

@@ -9,6 +9,7 @@ use crate::tzx::{
     blocks::{Block, BlockType}
 };
 
+/// A [Set signal level](https://worldofspectrum.net/features/TZXformat.html#SETLEVEL) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

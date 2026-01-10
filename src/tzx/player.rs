@@ -1,3 +1,5 @@
+//! TZX player.
+
 use rodio::{Sink, Source};
 use std::sync::Arc;
 use std::thread;
@@ -10,6 +12,7 @@ use crate::tzx::{
     waveforms::Waveform,
 };
 
+/// Provides a player for playing back [TzxData] to a [Sink].
 pub struct Player<'a> {
     config: Arc<Config>,
     sink: Sink,

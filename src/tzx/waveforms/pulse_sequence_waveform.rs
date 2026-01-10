@@ -13,6 +13,9 @@ use crate::tzx::{
     waveforms::{Pulse, Waveform},
 };
 
+/// A waveform for encoding a sequence of pulses as used by [PulseSequence](crate::tzx::blocks::PulseSequence).
+///
+/// Pulse sequences are typically used when modelling pilot tones of non-standard loaders such as Speedlock.
 #[allow(dead_code)]
 #[derive(Clone, Debug)]
 pub struct PulseSequenceWaveform {

@@ -12,6 +12,7 @@ use crate::tzx::{
     waveforms::Waveform,
 };
 
+/// An empty waveform. This is the default waveform used by all blocks that do not produce any output.
 #[derive(Clone, Debug)]
 pub struct EmptyWaveform {
     config: Arc<Config>,

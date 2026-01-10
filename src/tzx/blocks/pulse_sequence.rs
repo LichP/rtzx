@@ -13,6 +13,7 @@ use crate::tzx::{
     },
 };
 
+/// A [Pulse sequence](https://worldofspectrum.net/TZXformat.html#PULSESEQ) block.
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]

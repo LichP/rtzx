@@ -1,3 +1,5 @@
+//! TZX data file blocks.
+
 pub mod archive_info;
 pub mod block_type;
 pub mod call;
@@ -62,18 +64,29 @@ use std::io::{
 };
 use std::sync::Arc;
 
+/// A TZX data file block as described in the [specification](https://worldofspectrum.net/TZXformat.html).
 pub trait Block: std::fmt::Display {
+    /// Returns the [BlockType] of the block.
     fn r#type(&self) -> BlockType;
 
+    /// Returns a vector of [Waveform]s for a given [`Config`] and starting pulse state.
+    ///
+    /// Use this to obtain waveforms for conversion or playback.
     fn get_waveforms<'a>(&self, config: Arc<Config>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
         let empty_source = EmptyWaveform::new(config.clone());
         return vec![Box::new(empty_source)];
     }
 
+    /// Returns whether the start pulse of the next block should be high or low given the start pulse state of this block.
+    ///
+    /// When iterating blocks to [.get_waveforms()](Block::get_waveforms), use this to maintain current pulse state
+    /// from one loop iteration to the next.
     fn next_block_start_pulse_high(&self, _config: Arc<Config>, self_start_pulse_high: bool) -> bool { self_start_pulse_high }
 
+    /// Returns a boxed dyn clone of the block.
     fn clone_box(&self) -> Box<dyn Block>;
 
+    /// Allows a block to provide additional information for extended display.
     fn extended_display(&self, _out: &mut dyn ExtendedDisplayCollector) {}
 }
 
@@ -89,6 +102,12 @@ impl fmt::Debug for Box<dyn Block> {
     }
 }
 
+
+/// Provides a default block implementation for any unrecognised block type encountered when parsing TZX data.
+///
+/// Should any new block types be added to the TZX specification in future, this will ensure that such files
+/// can be successfully parsed in accordance with the
+/// [General Extension Rule](https://worldofspectrum.net/TZXformat.html#RULES)
 #[derive(BinRead, Clone, Debug)]
 #[br(little)]
 #[br(import(block_type_id: u8))]
@@ -116,6 +135,7 @@ impl Block for UndefinedBlockTypeBlock {
     }
 }
 
+/// Provides a default block implementation for any recognised but unsupported block type encountered when parsing TZX data.
 #[derive(BinRead, Clone, Debug)]
 #[br(little)]
 #[br(import(block_type: BlockType))]
@@ -143,6 +163,9 @@ impl Block for UnsupportedBlockTypeBlock {
     }
 }
 
+/// A TZX [Glue Block](https://worldofspectrum.net/TZXformat.html#GLUEBLOCK).
+///
+/// This block type allows TZX/CDT files to be concatenated.
 #[derive(Clone, Copy, Debug)]
 #[binrw]
 #[brw(little, magic = b"XTape!\x1A")]
@@ -167,6 +190,16 @@ impl Block for GlueBlock {
     }
 }
 
+/// Attempts to read a block of TZX data from the reader.
+///
+/// If a known block type is supplied, data is parsed as a block of that type where implemented, or as
+/// [UnsupportedBlockTypeBlock] otherwise. If the block type is not known, data is parsed as an
+/// [UndefinedBlockTypeBlock].
+///
+/// Once a block has successfully been parsed, the reader will be aligned to the end of the block ready
+/// to read the next block type identification byte. However, should a file be incorrectly formatted it
+/// is possible that the reader will become incorrectly aligned, resulting in further parse errors
+/// throughout the remainder of the file.
 pub fn read_block(block_type: RecoveryEnum<BlockType, u8>, mut reader: impl Read + Seek) -> Result<Box<dyn Block>, Error> {
     return match block_type {
         RecoveryEnum::Known(block_type_known) => match block_type_known {
