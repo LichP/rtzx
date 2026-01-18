@@ -23,17 +23,19 @@ fn main() -> io::Result<()> {
 
     // Create a path to the desired file
     let file_name = &cli.command.as_ref().and_then(|cmd| cmd.file_name()).expect("Filename not supplied");
-    let display = file_name.display();
 
     // Open the path in read-only mode, returns `io::Result<File>`
-    let file = match File::open(file_name) {
-        Err(why) => panic!("Couldn't open {}: {}", display, why),
+    let mut file = match File::open(file_name) {
+        Err(why) => panic!("Couldn't open {:?}: {}", file_name, why),
         Ok(file) => file,
     };
 
     let config = &cli.command.as_ref().and_then(|cmd| Some(cmd.config())).unwrap();
 
-    let tzx_data = TzxData::parse_from(file);
+    let tzx_data = match TzxData::read(&mut file) {
+        Err(why) => panic!("Failed to parse {:?} as TZX / CDT: {}", file_name, why),
+        Ok(data) => data,
+    };
 
     return match &cli.command {
         Some(Commands::Inspect(args)) => run_inspect(file_name, &config, args.waveforms, &tzx_data),

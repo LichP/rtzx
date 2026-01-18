@@ -2,6 +2,7 @@ use binrw::{
     binrw,
     BinRead, BinWrite,
 };
+use std::any::Any;
 use std::fmt;
 use strum_macros::Display;
 use crate::tzx::blocks::{Block, BlockType};
@@ -14,6 +15,7 @@ use crate::tzx::{ExtendedDisplayCollector, RecoveryEnum};
 pub struct ArchiveInfo {
     length: u16,
     #[br(if(length > 0, 0))]
+    #[bw(if(*length > 0))]
     entry_count: u8,
     #[br(count = entry_count)]
     entries: Vec<ArchiveInfoEntry>
@@ -39,6 +41,9 @@ impl Block for ArchiveInfo {
             out.push(entry);
         }
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 #[binrw]

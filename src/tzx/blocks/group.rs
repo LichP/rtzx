@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
@@ -31,6 +32,9 @@ impl Block for GroupStart {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// A [Group end](https://worldofspectrum.net/TZXformat.html#GRPEND) block.
@@ -55,4 +59,7 @@ impl Block for GroupEnd {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

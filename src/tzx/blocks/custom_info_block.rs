@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
@@ -37,6 +38,9 @@ impl Block for CustomInfoBlock {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// A badly encoded deprecated instructions block (see [custom info deprecated types](https://worldofspectrum.net/TZXformat.html#CUSTINFODPR)).
@@ -50,6 +54,7 @@ pub struct InstructionsBlock {
     #[br(count = if block_length == 0x7274736e { 11 } else { 0 })]
     padding: Vec<u8>,
     #[br(if(block_length == 0x7274736e, 0))]
+    #[bw(if(*block_length == 0x7274736e))]
     length: u32,
     #[br(count = if block_length == 0x7274736e { length } else { block_length } )]
     payload: Vec<u8>
@@ -71,4 +76,7 @@ impl Block for InstructionsBlock {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

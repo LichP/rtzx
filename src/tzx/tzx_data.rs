@@ -2,6 +2,8 @@
 
 use binrw::{
     BinRead,
+    BinWrite,
+    BinResult,
     Error,
 };
 use std::io::{
@@ -9,6 +11,7 @@ use std::io::{
     ErrorKind,
     Read,
     Seek,
+    Write,
 };
 
 use crate::tzx::{
@@ -17,12 +20,14 @@ use crate::tzx::{
 };
 use crate::tzx::blocks::{
     read_block,
+    write_block,
     Block,
+    BlockRef,
     BlockType,
 };
 
 /// Represents a parsed TZX/CDT data source.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct TzxData {
     /// The TZX [Header].
     pub header: Header,
@@ -31,6 +36,10 @@ pub struct TzxData {
 }
 
 impl TzxData {
+    pub fn new() -> Self {
+        TzxData { header: Header::default(), blocks: Vec::new() }
+    }
+
     /// Attempts to parse [TzxData] from the supplied reader.
     ///
     /// The data is expected to start with a [Header]. After the header, we process the remainder of the data in a
@@ -44,17 +53,28 @@ impl TzxData {
     ///
     /// Any such parse errors will not cause a panic unless they cause the parser to try and do something bad like
     /// reading beyond the end of the file. This will not happen with any validly formatted TZX/CDT files.
-    ///
-    /// # Panics
-    ///
-    /// At present attempting to parse non-TZX data (i.e. failing to parse the [Header])
-    /// or any IO error other than an unexpected EOF will cause a panic. This will change in a future version and we
-    /// will return a Result instead.
-    pub fn parse_from<R>(reader: R) -> TzxData where R: Read + Seek {
-        // Use a BufReader to handle underlying reads from the file.
+    pub fn read<R: Read + Seek>(reader: & mut R) -> Result<Self, Error> {
+        TzxData::read_le(reader)
+    }
+
+    /// Writes [TzxData] to the supplied writer.
+    pub fn write<W: Write + Seek>(&self, writer: & mut W) -> Result<(), Error> {
+        self.write_le(writer)
+    }
+}
+
+impl BinRead for TzxData {
+    type Args<'a> = ();
+
+    fn read_options<R: Read + Seek>(
+        reader: &mut R,
+        _endian: binrw::Endian,
+        _args: Self::Args<'_>,
+    ) -> BinResult<Self> {
+        // Use a BufReader to handle underlying reads from the input.
         let mut reader = BufReader::new(reader);
 
-        let header = Header::read(&mut reader).expect("File not in TZX format");
+        let header = Header::read(&mut reader)?;
 
         let mut blocks: Vec<Box<dyn Block + 'static>> = Vec::new();
 
@@ -97,9 +117,37 @@ impl TzxData {
             blocks.push(block.unwrap());
         }
 
-        return TzxData {
+        return Ok(TzxData {
             header,
             blocks
+        });
+    }
+}
+
+impl BinWrite for TzxData {
+    type Args<'a> = ();
+
+    fn write_options<W: Write + Seek>(
+        &self,
+        writer: &mut W,
+        _endian: binrw::Endian,
+        _args: Self::Args<'_>,
+    ) -> BinResult<()> {
+
+        self.header.write_le(writer)?;
+
+        for block in self.blocks.iter() {
+            if let Some(BlockRef::UndefinedBlockTypeBlock(b)) = block.as_block_ref() {
+                b.block_type.write_le(writer)?;
+            } else if let Some(BlockRef::UnsupportedBlockTypeBlock(b)) = block.as_block_ref() {
+                b.block_type.write_le(writer)?;
+            } else {
+                block.r#type().write_le(writer)?;
+            }
+
+            write_block(block, writer)?;
         }
+
+        Ok(())
     }
 }

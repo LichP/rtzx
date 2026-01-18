@@ -3,6 +3,7 @@ use binrw::{
 };
 use bitvec::prelude::*;
 use strum_macros::Display;
+use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
 
@@ -206,7 +207,7 @@ impl GeneralizedDataBlock {
 
 impl Block for GeneralizedDataBlock {
     fn r#type(&self) -> BlockType {
-        return BlockType::TurboSpeedDataBlock;
+        return BlockType::GeneralizedDataBlock;
     }
 
     fn get_waveforms(&self, config: Arc<Config>, start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
@@ -255,4 +256,7 @@ impl Block for GeneralizedDataBlock {
             out.push(&format!("Data Symbols: {}", SymbolDefinitionVecDisplay(self.symbols_data.clone())))
         }
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

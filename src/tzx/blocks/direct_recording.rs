@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
 
@@ -43,7 +44,7 @@ impl fmt::Display for DirectRecording {
 
 impl Block for DirectRecording {
     fn r#type(&self) -> BlockType {
-        return BlockType::TurboSpeedDataBlock;
+        return BlockType::DirectRecording;
     }
 
     fn get_waveforms(&self, config: Arc<Config>, _start_pulse_high: bool) -> Vec<Box<dyn Waveform + Send>> {
@@ -73,4 +74,7 @@ impl Block for DirectRecording {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

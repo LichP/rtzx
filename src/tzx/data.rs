@@ -50,6 +50,7 @@ pub struct DataPayload {
     /// When a waveform is generated for this payload, pulses are generated for the most significant bits
     /// of the ast byte up to this number, and subsequent bits in the byte are ignored.
     #[br(calc = used_bits)]
+    #[bw(ignore)]
     pub used_bits: u8,
 
     /// The length of the data in bytes.

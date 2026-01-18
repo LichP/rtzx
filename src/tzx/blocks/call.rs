@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use crate::tzx::blocks::Block;
 use crate::tzx::blocks::BlockType;
@@ -30,6 +31,9 @@ impl Block for CallSequence {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// A [Return from sequence](https://worldofspectrum.net/TZXformat.html#RETURNSEQ) block.
@@ -54,4 +58,7 @@ impl Block for ReturnFromSequence {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

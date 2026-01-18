@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use crate::tzx::{
     ExtendedDisplayCollector,
@@ -15,6 +16,7 @@ use crate::tzx::{
 pub struct SelectBlock {
     length: u16,
     #[br(if(length != 0, 0))]
+    #[bw(if(*length != 0))]
     entry_count: u8,
     #[br(count = entry_count)]
     entries: Vec<SelectBlockEntry>
@@ -40,6 +42,9 @@ impl Block for SelectBlock {
             out.push(entry);
         }
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 #[binrw]

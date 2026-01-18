@@ -55,17 +55,23 @@ use binrw::{
     binrw,
     BinRead,
     BinResult,
+    BinWrite,
     Error
 };
+use std::any::Any;
 use std::fmt;
 use std::io::{
     Read,
     Seek,
+    Write,
 };
 use std::sync::Arc;
 
+pub trait WriteSeek: Write + Seek {}
+impl<T: Write + Seek> WriteSeek for T {}
+
 /// A TZX data file block as described in the [specification](https://worldofspectrum.net/TZXformat.html).
-pub trait Block: std::fmt::Display {
+pub trait Block: fmt::Display + Any {
     /// Returns the [BlockType] of the block.
     fn r#type(&self) -> BlockType;
 
@@ -88,6 +94,10 @@ pub trait Block: std::fmt::Display {
 
     /// Allows a block to provide additional information for extended display.
     fn extended_display(&self, _out: &mut dyn ExtendedDisplayCollector) {}
+
+    // Required for downcasting
+    fn as_any(&self) -> &dyn Any;
+    fn as_any_mut(&mut self) -> &mut dyn Any;
 }
 
 impl Clone for Box<dyn Block> {
@@ -108,12 +118,15 @@ impl fmt::Debug for Box<dyn Block> {
 /// Should any new block types be added to the TZX specification in future, this will ensure that such files
 /// can be successfully parsed in accordance with the
 /// [General Extension Rule](https://worldofspectrum.net/TZXformat.html#RULES)
-#[derive(BinRead, Clone, Debug)]
-#[br(little)]
+#[binrw]
+#[brw(little)]
 #[br(import(block_type_id: u8))]
+#[derive(Clone, Debug)]
 pub struct UndefinedBlockTypeBlock {
     #[br(calc = block_type_id)]
+    #[bw(ignore)]
     pub block_type: u8,
+    #[bw(try_calc(u32::try_from(payload.len())))]
     pub length: u32,
     #[br(count = length)]
     pub payload: Vec<u8>
@@ -121,7 +134,7 @@ pub struct UndefinedBlockTypeBlock {
 
 impl fmt::Display for UndefinedBlockTypeBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "UndefinedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.length)
+        write!(f, "UndefinedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.payload.len())
     }
 }
 
@@ -133,15 +146,21 @@ impl Block for UndefinedBlockTypeBlock {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// Provides a default block implementation for any recognised but unsupported block type encountered when parsing TZX data.
-#[derive(BinRead, Clone, Debug)]
-#[br(little)]
+#[binrw]
+#[brw(little)]
 #[br(import(block_type: BlockType))]
+#[derive(Clone, Debug)]
 pub struct UnsupportedBlockTypeBlock {
     #[br(calc = block_type)]
+    #[bw(ignore)]
     pub block_type: BlockType,
+    #[bw(try_calc(u32::try_from(payload.len())))]
     pub length: u32,
     #[br(count = length)]
     pub payload: Vec<u8>
@@ -149,7 +168,7 @@ pub struct UnsupportedBlockTypeBlock {
 
 impl fmt::Display for UnsupportedBlockTypeBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "UnsupportedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.length)
+        write!(f, "UnsupportedBlockTypeBlock: {0} ({0:#x}), {1:5} bytes", self.block_type, self.payload.len())
     }
 }
 
@@ -161,6 +180,9 @@ impl Block for UnsupportedBlockTypeBlock {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// A TZX [Glue Block](https://worldofspectrum.net/TZXformat.html#GLUEBLOCK).
@@ -188,6 +210,71 @@ impl Block for GlueBlock {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
+}
+
+macro_rules! block_ref_enum {
+    ($($ty:ty => $variant:ident),* $(,)?) => {
+        pub enum BlockRef<'a> {
+            $( $variant(&'a $ty), )*
+        }
+
+        impl dyn Block {
+            pub fn as_block_ref(&self) -> Option<BlockRef<'_>> {
+                $(
+                    if let Some(b) = self.as_any().downcast_ref::<$ty>() {
+                        return Some(BlockRef::$variant(b));
+                    }
+                )*
+                None
+            }
+        }
+
+        /// Attempts to write a block as TZX data to the writer.
+        pub fn write_block<W: Write + Seek>(block: &Box<dyn Block>, writer: &mut W) -> BinResult<()> {
+            return match block.as_block_ref() {
+                $(
+                    Some(BlockRef::$variant(b)) => b.write_le(writer),
+                )*
+                _ => Ok(()),
+            }
+        }
+    };
+}
+
+// Usage for all block types
+block_ref_enum! {
+    StandardSpeedDataBlock => StandardSpeedDataBlock,
+    TurboSpeedDataBlock => TurboSpeedDataBlock,
+    PureTone => PureTone,
+    PulseSequence => PulseSequence,
+    PureDataBlock => PureDataBlock,
+    DirectRecording => DirectRecording,
+    GeneralizedDataBlock => GeneralizedDataBlock,
+    PauseOrStopTapeCommand => PauseOrStopTapeCommand,
+    GroupStart => GroupStart,
+    GroupEnd => GroupEnd,
+    JumpToBlock => JumpToBlock,
+    LoopStart => LoopStart,
+    LoopEnd => LoopEnd,
+    CallSequence => CallSequence,
+    ReturnFromSequence => ReturnFromSequence,
+    SelectBlock => SelectBlock,
+    StopTapeIf48K => StopTapeIf48K,
+    SetSignalLevel => SetSignalLevel,
+    TextDescription => TextDescription,
+    MessageBlock => MessageBlock,
+    ArchiveInfo => ArchiveInfo,
+    HardwareTypeBlock => HardwareTypeBlock,
+    EmulationInfo => EmulationInfo,
+    CustomInfoBlock => CustomInfoBlock,
+    SnapshotBlock => SnapshotBlock,
+    InstructionsBlock => InstructionsBlock,
+    GlueBlock => GlueBlock,
+    UndefinedBlockTypeBlock => UndefinedBlockTypeBlock,
+    UnsupportedBlockTypeBlock => UnsupportedBlockTypeBlock,
 }
 
 /// Attempts to read a block of TZX data from the reader.

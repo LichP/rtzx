@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use::std::sync::Arc;
 
@@ -43,6 +44,9 @@ impl Block for PauseOrStopTapeCommand {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// A [Stop tape if in 48k mode](https://worldofspectrum.net/TZXformat.html#STOP48K) block.
@@ -70,4 +74,7 @@ impl Block for StopTapeIf48K {
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

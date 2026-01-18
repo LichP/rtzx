@@ -1,6 +1,7 @@
 use binrw::{
     binrw,
 };
+use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
 
@@ -87,4 +88,7 @@ impl Block for StandardSpeedDataBlock {
             out.push(&format!("{}", payload));
         }
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }

@@ -38,6 +38,7 @@ use binrw::{
     binrw,
     BinRead, BinWrite,
 };
+use std::any::Any;
 use std::fmt;
 use strum_macros::Display;
 
@@ -78,6 +79,9 @@ impl Block for HardwareTypeBlock {
             out.push(entry);
         }
     }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 /// The magical nested hardware type enum.
@@ -209,7 +213,7 @@ impl BinWrite for HardwareType {
                 inner.write_options(writer, endian, ())?;
             }
             HardwareType::Digitizer(inner) => {
-                111u8.write_options(writer, endian, ())?;
+                11u8.write_options(writer, endian, ())?;
                 inner.write_options(writer, endian, ())?;
             }
             HardwareType::NetworkAdapter(inner) => {
@@ -255,6 +259,7 @@ pub enum HardwareInformation {
 pub struct HardwareTypeBlockEntry {
     hardware_type: RecoveryEnum<HardwareType, u8>,
     #[br(if(match hardware_type { RecoveryEnum::Known(_) => false, _ => true }, 0))]
+    #[bw(if(match *hardware_type { RecoveryEnum::Known(_) => false, _ => true }))]
     unknown_hardware_id: u8,
     information: RecoveryEnum<HardwareInformation, u8>,
 }
