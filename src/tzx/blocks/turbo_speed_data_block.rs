@@ -28,18 +28,37 @@ use crate::tzx::{
 #[brw(little)]
 #[derive(Clone, Debug)]
 pub struct TurboSpeedDataBlock {
-    length_pulse_pilot: u16,
-    length_pulse_sync_first: u16,
-    length_pulse_sync_second: u16,
-    length_pulse_zero: u16,
-    length_pulse_one: u16,
-    length_tone_pilot: u16,
+    pub length_pulse_pilot: u16,
+    pub length_pulse_sync_first: u16,
+    pub length_pulse_sync_second: u16,
+    pub length_pulse_zero: u16,
+    pub length_pulse_one: u16,
+    pub length_tone_pilot: u16,
     #[br(temp)]
     #[bw(calc = payload.used_bits)]
     used_bits: u8,
-    pause: u16,
+    pub pause: u16,
     #[br(args(used_bits))]
-    payload: DataPayload,
+    pub payload: DataPayload,
+}
+
+impl TurboSpeedDataBlock {
+    pub fn new() -> Self {
+        Self {
+            length_pulse_pilot: 2370,
+            length_pulse_sync_first: 1185,
+            length_pulse_sync_second: 1185,
+            length_pulse_zero: 1185,
+            length_pulse_one: 1185,
+            length_tone_pilot: 4096,
+            pause: 2000,
+            payload: DataPayload::default(),
+        }
+    }
+}
+
+impl Default for TurboSpeedDataBlock {
+    fn default() -> Self { Self::new() }
 }
 
 impl fmt::Display for TurboSpeedDataBlock {

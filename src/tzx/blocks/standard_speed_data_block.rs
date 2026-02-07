@@ -29,12 +29,25 @@ use crate::tzx::{
 #[brw(little)]
 #[derive(Clone, Debug)]
 pub struct StandardSpeedDataBlock {
-    pause: u16,
+    pub pause: u16,
     #[bw(try_calc(u16::try_from(data.len())))]
     length: u16,
     #[br(count = length, map = |v: Vec<u8>| Arc::new(v))]
     #[bw(map = |arc: &Arc<Vec<u8>>| &**arc)]
-    data: Arc<Vec<u8>>,
+    pub data: Arc<Vec<u8>>,
+}
+
+impl StandardSpeedDataBlock {
+    pub fn new() -> Self {
+        Self {
+            pause: 2000,
+            data: Arc::new(Vec::new()),
+        }
+    }
+}
+
+impl Default for StandardSpeedDataBlock {
+    fn default() -> Self { Self::new() }
 }
 
 impl fmt::Display for StandardSpeedDataBlock {
