@@ -2,9 +2,11 @@
 
 pub mod cpc;
 pub mod crc_reader;
+pub mod xor_reader_writer;
 
 pub use cpc::{CPCData, CPCHeader, CPCSync};
 pub use crc_reader::CrcPagedRW;
+pub use xor_reader_writer::{XorReader, XorWriter};
 
 /// A payload corresponding to a known platform encoding.
 pub trait Payload: std::fmt::Display {
