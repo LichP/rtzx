@@ -1588,6 +1588,7 @@ dependencies = [
  "crossterm",
  "figlet-rs",
  "hound",
+ "num_enum",
  "popcnt",
  "ratatui",
  "rodio",

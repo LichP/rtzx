@@ -2,20 +2,29 @@ use binrw::{
     binrw,
     BinWrite,
 };
+use num_enum::TryFromPrimitive;
 use strum_macros::Display;
+use std::any::Any;
 use std::borrow::Cow;
 use std::fmt;
 use std::io::Cursor;
+use std::sync::Arc;
 
-use crate::tzx::tap::Payload;
+use crate::tzx::{
+    blocks::{Block, TurboSpeedDataBlock},
+    data::DataPayload,
+    tap::{CrcPagedRW, Payload},
+};
 
 /// A standard Amstrad CPC tape block header.
 ///
 /// CPC header blocks are 28 bytes long, and then padded with zeroes to 256 bytes and appended with a two byte checksum
-/// when encoded to tape. The checksum is not included in this struct, it should instead be handled by
-/// [CrcPagedRW](crate::tzx::tap::CrcPagedRW).
+/// when encoded to tape. When loaded from a tap file, the checksum bytes and padding are omitted. When loading from a
+/// CDT block [DataPayload], use [CrcPagedRW](crate::tzx::tap::CrcPagedRW) to handle the checksum validation / calculation
+/// and padding.
 #[binrw]
 #[brw(little)]
+#[brw(import(to_from_tap: bool))]
 #[derive(Debug, Clone, Hash)]
 pub struct CPCHeader {
     #[br(count = 16)]
@@ -32,6 +41,7 @@ pub struct CPCHeader {
     first_block: bool,
     logical_length: u16,
     entry_address: u16,
+    #[br(if(!to_from_tap, [0; 228]))]
     padding: [u8; 228], // pad the rest of the 256-byte block
 }
 
@@ -67,11 +77,32 @@ impl CPCHeader {
             padding: [0; 228],
         }
     }
+
+    pub fn into_turbo_speed_data_block(&self) -> TurboSpeedDataBlock {
+        let mut tsdb = TurboSpeedDataBlock::new();
+        tsdb.pause = 15;
+        tsdb.payload = self.into();
+        tsdb
+    }
 }
 
 impl Default for CPCHeader {
     fn default() -> Self {
         CPCHeader::new("", 1, true, 1, 0, 0, true, 0, 0)
+    }
+}
+
+impl Into<DataPayload> for &CPCHeader {
+    fn into(self) -> DataPayload
+    {
+        let mut writer = Cursor::new(Vec::new());
+        self.flag_byte().write(&mut writer).unwrap();
+        let mut crc_writer = CrcPagedRW::new(writer, 1, 256);
+        self.write(&mut crc_writer).unwrap();
+        writer = crc_writer.into_inner();
+        (0xffffffff as u32).write_le(&mut writer).unwrap();
+        let encoded = writer.into_inner();
+        return DataPayload::new(8, encoded.len() as u32, Arc::new(encoded));
     }
 }
 
@@ -87,6 +118,15 @@ impl Payload for CPCHeader {
     fn clone_box(&self) -> Box<dyn Payload> {
         Box::new(self.clone())
     }
+
+    fn flag_byte(&self) -> Option<u8> { Some(CPCFlag::CPCHeader as u8) }
+
+    fn into_block_box(self: Box<Self>) -> Box<dyn Block> {
+        Box::new((*self).into_turbo_speed_data_block())
+    }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 impl fmt::Display for CPCHeader {
@@ -119,10 +159,30 @@ pub struct CPCData {
 
 impl CPCData {
     pub fn new(data: Vec<u8>) -> Self { CPCData { data } }
+
+    pub fn into_turbo_speed_data_block(&self) -> TurboSpeedDataBlock {
+        let mut tsdb = TurboSpeedDataBlock::new();
+        tsdb.payload = self.into();
+        tsdb
+    }
 }
 
 impl Default for CPCData {
     fn default() -> Self { CPCData::new(Vec::new()) }
+}
+
+impl Into<DataPayload> for &CPCData {
+    fn into(self) -> DataPayload
+    {
+        let mut writer = Cursor::new(Vec::new());
+        self.flag_byte().write(&mut writer).unwrap();
+        let mut crc_writer = CrcPagedRW::new(writer, 1, 256);
+        self.write(&mut crc_writer).unwrap();
+        writer = crc_writer.into_inner();
+        (0xffffffff as u32).write_le(&mut writer).unwrap();
+        let encoded = writer.into_inner();
+        return DataPayload::new(8, encoded.len() as u32, Arc::new(encoded));
+    }
 }
 
 impl Payload for CPCData {
@@ -131,6 +191,15 @@ impl Payload for CPCData {
     fn clone_box(&self) -> Box<dyn Payload> {
         Box::new(self.clone())
     }
+
+    fn flag_byte(&self) -> Option<u8> { Some(CPCFlag::CPCData as u8) }
+
+    fn into_block_box(self: Box<Self>) -> Box<dyn Block> {
+        Box::new((*self).into_turbo_speed_data_block())
+    }
+
+    fn as_any(&self) -> &dyn Any { self }
+    fn as_any_mut(&mut self) -> &mut dyn Any { self }
 }
 
 impl fmt::Display for CPCData {
@@ -141,11 +210,12 @@ impl fmt::Display for CPCData {
     }
 }
 
-/// Sync byte indicating whether a payload contains a CPC header or data .
+/// Flag byte indicating whether a payload contains a CPC header or data .
 #[binrw]
 #[brw(little, repr = u8)]
-#[derive(Clone, Copy, Display, Debug, Default, Eq, PartialEq, Hash)]
-pub enum CPCSync {
+#[derive(Clone, Copy, Display, Debug, Default, Eq, PartialEq, Hash, TryFromPrimitive)]
+#[repr(u8)]
+pub enum CPCFlag {
     #[default]
     CPCHeader = 0x2c,
     CPCData = 0x16,

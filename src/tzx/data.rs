@@ -2,9 +2,6 @@
 
 use binrw::{
     binrw,
-    BinRead,
-    BinResult,
-    Error
 };
 
 use std::fmt;
@@ -14,11 +11,8 @@ use std::ops::Range;
 use std::sync::{Arc, OnceLock};
 
 use crate::tzx::tap::{
-    CPCSync,
-    CPCData,
-    CPCHeader,
-    CrcPagedRW,
     Payload,
+    read_payload,
 };
 
 /// A struct representing the numbers of bits in a [DataPayload].
@@ -124,27 +118,13 @@ impl DataPayload {
     /// Attempts to parse the data as a known payload type, such as a [CPCHeader] or [CPCData] payload.
     /// Returns `Some(Box<dyn Payload>)` if the data can be so parsed, and `None` if not.
     pub fn read_payload(&self) -> Option<Box<dyn Payload>> {
-        // Only attempt to parse if data length matches:
-        // Sync (1) + (256 + CheckSum (2) = 258) * x + Trailer (4) = 258x + 5
-        if self.len() < 5 || (self.len() - 5) % 258 != 0 { return None }
-        let payload_len = (self.len() - 5) / 258 * 256;
+        if self.len() == 0 { return None }
 
-        let mut reader = Cursor::new(&self.data[..]);
-        let sync = CPCSync::read(&mut reader);
-        if !sync.is_ok() { return None }
+        let reader = Cursor::new(&self.data[..]);
 
-        let mut crc_reader = CrcPagedRW::new(reader, 256);
-
-        return match sync.unwrap() {
-            CPCSync::CPCHeader => { to_box_dyn(CPCHeader::read(&mut crc_reader)).ok() }
-            CPCSync::CPCData => { to_box_dyn(CPCData::read_args(&mut crc_reader, (payload_len,))).ok() }
-        }
-
-        // Technically we should parse the trailer for CPC blocks - do we care?
-        // // read trailer (always 4×0xFF)
-        // let mut trailer = [0xFFu8; 4];
-        // reader.read_exact(&mut trailer);
-        // if trailer != [0xFFu8; 4] { return None }
+        read_payload(self.len(), false, reader)
+            .inspect_err(|e| eprintln!("Failed to parse payload: {:?}", e))
+            .ok()
     }
 
     /// Returns the total number of bits in the data, excluding unused bits in the last byte.
@@ -190,10 +170,4 @@ impl fmt::Display for DataPayloadWithPosition {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "DataPayloadWithPosition: {} bytes (used_bits: {}; total_bits: {}; current: {}.{})", self.payload.len(), self.payload.used_bits, self.payload.total_bits(), self.current_byte_index, self.current_bit_index)
     }
-}
-
-fn to_box_dyn<T>(block_result: BinResult<T>) -> Result<Box<dyn Payload>, Error>
-where T: Payload + 'static
-{
-    block_result.map(|u| -> Box<dyn Payload> { Box::new(u) })
 }

@@ -22,6 +22,7 @@ const CRC16: Crc<u16> = Crc::<u16>::new(&CRC16_CCITT_CPC);
 #[derive(Clone, Debug)]
 pub struct CrcPagedRW<RW> {
     inner: RW,
+    inner_offset: u64,
     page_size: usize,
     buffer: Vec<u8>,
     buf_pos: usize,
@@ -30,9 +31,10 @@ pub struct CrcPagedRW<RW> {
 }
 
 impl<RW> CrcPagedRW<RW> {
-    pub fn new(inner: RW, page_size: usize) -> Self {
+    pub fn new(inner: RW, inner_offset: u64, page_size: usize) -> Self {
         Self {
             inner,
+            inner_offset,
             page_size,
             buffer: vec![0; page_size],
             buf_pos: 0,
@@ -40,10 +42,12 @@ impl<RW> CrcPagedRW<RW> {
             page_number: 0,
         }
     }
+
+    pub fn into_inner(self) -> RW { self.inner }
 }
 
 impl<R: Read> CrcPagedRW<R> {
-    fn read_next_page(&mut self) -> io::Result<()> {
+    fn read_page(&mut self) -> io::Result<()> {
         // eprintln!("read_next_page: {:?}", self.page_number);
         // Read exactly one page.
         self.inner.read_exact(&mut self.buffer)?;
@@ -63,7 +67,6 @@ impl<R: Read> CrcPagedRW<R> {
             ));
         }
 
-        self.buf_pos = 0;
         self.page_filled = true;
         Ok(())
     }
@@ -71,13 +74,11 @@ impl<R: Read> CrcPagedRW<R> {
 
 impl<R: Read> Read for CrcPagedRW<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        // eprintln!("read: {:?}", buf.len());
         let mut total_read = 0;
 
         while total_read < buf.len() {
             if !self.page_filled {
-                // load next block
-                match self.read_next_page() {
+                match self.read_page() {
                     Ok(_) => {}
                     Err(ref e) if e.kind() == io::ErrorKind::UnexpectedEof => break,
                     Err(e) => return Err(e),
@@ -96,6 +97,7 @@ impl<R: Read> Read for CrcPagedRW<R> {
             if self.buf_pos == self.page_size {
                 // finished current block
                 self.page_filled = false;
+                self.buf_pos = 0;
                 self.page_number += 1;
             }
         }
@@ -150,12 +152,16 @@ impl<W: Write> Write for CrcPagedRW<W> {
     }
 }
 
-impl<RW: Read + Seek> Seek for CrcPagedRW<RW> {
+impl<RW: Seek> Seek for CrcPagedRW<RW> {
     fn seek(&mut self, pos: SeekFrom) -> Result<u64> {
         // eprintln!("{:?}", pos);
-        let new_buf_pos: u64;
+        let mut new_buf_pos: u64 = 0;
         let mut new_page_number: u64 = 0;
+        let mut seek_before_crc_start = false;
         match pos {
+            SeekFrom::Current(offset) if self.inner_offset as i64 + offset < 0 => {
+                seek_before_crc_start = true;
+            },
             SeekFrom::Current(mut offset) => {
                 new_page_number = self.page_number;
                 while offset < 0 {
@@ -172,25 +178,33 @@ impl<RW: Read + Seek> Seek for CrcPagedRW<RW> {
                 }
                 new_buf_pos = self.buf_pos as u64 + offset as u64;
             }
-            SeekFrom::Start(mut start_pos) => {
-                while start_pos >= self.page_size as u64 {
-                    start_pos -= self.page_size as u64;
+            SeekFrom::Start(start_pos) if start_pos < self.inner_offset => {
+                seek_before_crc_start = true;
+            },
+            SeekFrom::Start(start_pos) => {
+                let mut crc_start_pos = start_pos - self.inner_offset;
+                while crc_start_pos >= self.page_size as u64 {
+                    crc_start_pos -= self.page_size as u64;
                     new_page_number += 1;
                 }
-                new_buf_pos = start_pos;
+                new_buf_pos = crc_start_pos;
                 // eprintln!("new_buf_pos: {}; new_page_number: {}", new_buf_pos, new_page_number);
             }
             SeekFrom::End(_) => { return Err(Error::new(ErrorKind::Unsupported, "CrcPagedRW cannot seek from end")) }
         }
 
         self.page_number = new_page_number;
-        if self.page_number != new_page_number {
-            let seek_inner = self.inner.seek(SeekFrom::Current((new_page_number as i64 - self.page_number as i64) * (self.page_size as i64 + 2)));
-            if seek_inner.is_err() { return seek_inner }
-            self.read_next_page().unwrap();
+        self.buf_pos = new_buf_pos as usize;
+
+        if seek_before_crc_start {
+            self.page_filled = false;
+            return self.inner.seek(pos);
         }
 
-        self.buf_pos = new_buf_pos as usize;
+        if self.page_number != new_page_number {
+            self.page_filled = false;
+            self.inner.seek(SeekFrom::Current((new_page_number as i64 - self.page_number as i64) * (self.page_size as i64 + 2)))?;
+        }
 
         return Ok(self.page_number * self.page_size as u64 + self.buf_pos as u64);
     }
