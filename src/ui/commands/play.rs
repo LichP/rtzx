@@ -23,7 +23,7 @@ use std::thread;
 use std::time::Duration;
 
 use crate::tzx::{
-    Config, ExtendedDisplayCollector, Player, TzxData, waveforms::Waveform,
+    Config, ExtendedDisplayCollector, Player, TapeDataFile, waveforms::Waveform,
 };
 
 fn format_duration(duration: Duration) -> String {
@@ -48,7 +48,9 @@ impl ExtendedDisplayCollector for PlayLineCollector {
     }
 }
 
-pub fn run_play(path: &Path, config: &Config, tzx_data: &TzxData) -> io::Result<()> {
+pub fn run_play(path: &Path, config: &Config, tape_data: &TapeDataFile) -> io::Result<()> {
+    let tzx_data = tape_data.tzx_data.as_ref().expect("TZX data missing!");
+
     let default_device = cpal::default_host()
         .default_output_device()
         .expect("No default audio output device is found.");

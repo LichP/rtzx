@@ -2,7 +2,7 @@ use clap::Parser;
 use std::fs::File;
 use std::io;
 
-use rtzx::TzxData;
+use rtzx::{TapeDataFile, TapeDataFileType};
 use rtzx::ui::commands::{
     Commands,
     convert::run_convert,
@@ -32,15 +32,17 @@ fn main() -> io::Result<()> {
 
     let config = &cli.command.as_ref().and_then(|cmd| Some(cmd.config())).unwrap();
 
-    let tzx_data = match TzxData::read(&mut file) {
-        Err(why) => panic!("Failed to parse {:?} as TZX / CDT: {}", file_name, why),
+    let file_type = TapeDataFileType::from(file_name.extension().and_then(|s| s.to_str()));
+
+    let file_data = match TapeDataFile::read_as(&mut file, file_type) {
+        Err(why) => panic!("Failed to parse {:?} as {}: {}", file_name, file_type, why),
         Ok(data) => data,
     };
 
     return match &cli.command {
-        Some(Commands::Inspect(args)) => run_inspect(file_name, &config, args.waveforms, &tzx_data),
-        Some(Commands::Convert(args)) => run_convert(&args, &config, &tzx_data),
-        Some(Commands::Play(_)) => run_play(file_name, &config, &tzx_data),
+        Some(Commands::Inspect(args)) => run_inspect(file_name, &config, args.waveforms, &file_data),
+        Some(Commands::Convert(args)) => run_convert(&args, &config, &file_data),
+        Some(Commands::Play(_)) => run_play(file_name, &config, &file_data),
         None => Ok(()),
     };
 }

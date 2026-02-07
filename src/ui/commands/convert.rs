@@ -3,10 +3,15 @@ use rodio::Source;
 use std::io;
 use std::sync::Arc;
 
-use crate::tzx::{Config, TzxData};
+use crate::{
+    Config,
+    TapeDataFile,
+};
 use crate::ui::commands::ConvertArgs;
 
-pub fn run_convert(args: &ConvertArgs, config: &Config, tzx_data: &TzxData) -> io::Result<()> {
+pub fn run_convert(args: &ConvertArgs, config: &Config, tape_data: &TapeDataFile) -> io::Result<()> {
+    let tzx_data = tape_data.tzx_data.as_ref().expect("TZX data missing!");
+
     let spec = hound::WavSpec {
         channels: 1,
         sample_rate: config.sample_rate,
