@@ -36,5 +36,7 @@ pub mod ui;
 pub use crate::tzx::{
     Config,
     Platform,
+    TapeDataFile,
+    TapeDataFileType,
     TzxData,
 };
