@@ -5,6 +5,7 @@ use std::any::Any;
 use std::fmt;
 use std::sync::Arc;
 
+use crate::U24;
 use crate::tzx::{
     Config,
     ExtendedDisplayCollector,
@@ -29,7 +30,10 @@ pub struct PureDataBlock {
     #[bw(calc = payload.used_bits)]
     used_bits: u8,
     pause: u16,
-    #[br(args(used_bits))]
+    #[br(temp)]
+    #[bw(calc = payload.len().into())]
+    length: U24,
+    #[br(args(used_bits, length.into()))]
     payload: DataPayload,
 }
 
