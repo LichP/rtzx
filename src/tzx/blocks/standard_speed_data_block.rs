@@ -94,7 +94,7 @@ impl Block for StandardSpeedDataBlock {
     }
 
     fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
-        if let Some(payload) = self.payload.read_payload() {
+        if let Some(payload) = self.payload.as_payload() {
             out.push(&format!("{}", payload));
         }
     }
