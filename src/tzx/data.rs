@@ -38,19 +38,14 @@ impl fmt::Display for BitCounts {
 #[binrw]
 #[brw(little)]
 #[derive(Clone, Debug)]
-#[br(import(used_bits: u8))]
+#[br(import(used_bits: u8, length: usize))]
 pub struct DataPayload {
     /// The number of used bits in the last byte of [data](DataPayload::data).
     /// When a waveform is generated for this payload, pulses are generated for the most significant bits
-    /// of the ast byte up to this number, and subsequent bits in the byte are ignored.
+    /// of the last byte up to this number, and subsequent bits in the byte are ignored.
     #[br(calc = used_bits)]
     #[bw(ignore)]
     pub used_bits: u8,
-
-    /// The length of the data in bytes.
-    #[br(parse_with = binrw::helpers::read_u24)]
-    #[bw(write_with = binrw::helpers::write_u24)]
-    pub length: u32,
 
     /// The data as a vector of bytes. We wrap the data in an [Arc] to allow for efficient cloning.
     #[br(count = length, map = |v: Vec<u8>| Arc::new(v))]
@@ -69,10 +64,9 @@ impl Hash for DataPayload {
 
 impl DataPayload {
     /// Creates a new [DataPayload].
-    pub fn new(used_bits: u8, length: u32, data: Arc<Vec<u8>>) -> Self {
+    pub fn new(used_bits: u8, data: Arc<Vec<u8>>) -> Self {
         Self {
             used_bits,
-            length,
             data,
             cached_bit_counts: OnceLock::new(),
         }
@@ -133,7 +127,7 @@ impl DataPayload {
 }
 
 impl Default for DataPayload {
-    fn default() -> Self { DataPayload::new(0, 0, Arc::new(Vec::new())) }
+    fn default() -> Self { DataPayload::new(0, Arc::new(Vec::new())) }
 }
 
 impl fmt::Display for DataPayload {
