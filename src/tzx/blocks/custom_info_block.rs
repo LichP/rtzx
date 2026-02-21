@@ -3,8 +3,10 @@ use binrw::{
 };
 use std::any::Any;
 use std::fmt;
-use crate::tzx::blocks::Block;
-use crate::tzx::blocks::BlockType;
+use crate::tzx::{
+    ExtendedDisplayCollector,
+    blocks::{Block, BlockType}
+};
 
 /// A [Custom info](https://worldofspectrum.net/TZXformat.html#CUSTOMBLOCK) block.
 /// Parsed, but unsupported other than for presentation of encoded bytes.
@@ -22,11 +24,8 @@ pub struct CustomInfoBlock {
 impl fmt::Display for CustomInfoBlock {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let id_string = String::from_utf8_lossy(&self.id);
-        write!(f, "CustomInfoBlock: {} :", id_string)?;
-        for byte in &self.data {
-            write!(f, " {:02X}", byte)?;
-        }
-        Ok(())
+        let data_string = String::from_utf8_lossy(&self.data);
+        write!(f, "CustomInfoBlock: {} : {}", id_string, data_string)
     }
 }
 
@@ -37,6 +36,35 @@ impl Block for CustomInfoBlock {
 
     fn clone_box(&self) -> Box<dyn Block> {
         Box::new(self.clone())
+    }
+
+    fn extended_display(&self, out: &mut dyn ExtendedDisplayCollector) {
+        let mut chunk_count = 0;
+        for chunk in self.data.chunks(16) {
+            let mut chunk_string = format!("  {:04x}: ", chunk_count * 16);
+
+            for (i, byte) in chunk.iter().enumerate() {
+                if i % 16 == 8 { chunk_string.push(' ') }
+                chunk_string.push_str(&format!("{:02x} ", byte));
+            }
+            if chunk.len() < 16 {
+                if chunk.len() < 8 { chunk_string.push(' ') }
+                chunk_string.push_str(&" ".repeat((16 - chunk.len()) * 3));
+            }
+
+            chunk_string.push_str("  |");
+            for byte in chunk {
+                chunk_string.push(to_ascii_or_dot(*byte));
+            }
+            if chunk.len() < 16 {
+                chunk_string.push_str(&" ".repeat(16 - chunk.len()));
+            }
+
+            chunk_string.push('|');
+
+            out.push(&chunk_string);
+            chunk_count += 1;
+        }
     }
 
     fn as_any(&self) -> &dyn Any { self }
@@ -79,4 +107,13 @@ impl Block for InstructionsBlock {
 
     fn as_any(&self) -> &dyn Any { self }
     fn as_any_mut(&mut self) -> &mut dyn Any { self }
+}
+
+fn to_ascii_or_dot(byte: u8) -> char {
+    let c = byte as char;
+    if c.is_ascii_graphic() || c == ' ' {
+        c
+    } else {
+        '.'
+    }
 }
