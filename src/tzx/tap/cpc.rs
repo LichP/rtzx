@@ -92,17 +92,17 @@ impl Default for CPCHeader {
     }
 }
 
-impl Into<DataPayload> for &CPCHeader {
-    fn into(self) -> DataPayload
+impl From<&CPCHeader> for DataPayload {
+    fn from(value: &CPCHeader) -> Self
     {
         let mut writer = Cursor::new(Vec::new());
-        self.flag_byte().write(&mut writer).unwrap();
+        value.flag_byte().write(&mut writer).unwrap();
         let mut crc_writer = CrcPagedRW::new(writer, 1, 256);
-        self.write(&mut crc_writer).unwrap();
+        value.write(&mut crc_writer).unwrap();
         writer = crc_writer.into_inner();
         (0xffffffff as u32).write_le(&mut writer).unwrap();
         let encoded = writer.into_inner();
-        return DataPayload::new(8, encoded.len() as u32, Arc::new(encoded));
+        return Self::new(8, Arc::new(encoded));
     }
 }
 
@@ -171,17 +171,17 @@ impl Default for CPCData {
     fn default() -> Self { CPCData::new(Vec::new()) }
 }
 
-impl Into<DataPayload> for &CPCData {
-    fn into(self) -> DataPayload
+impl From<&CPCData> for DataPayload {
+    fn from(value: &CPCData) -> Self
     {
         let mut writer = Cursor::new(Vec::new());
-        self.flag_byte().write(&mut writer).unwrap();
+        value.flag_byte().write(&mut writer).unwrap();
         let mut crc_writer = CrcPagedRW::new(writer, 1, 256);
-        self.write(&mut crc_writer).unwrap();
+        value.write(&mut crc_writer).unwrap();
         writer = crc_writer.into_inner();
         (0xffffffff as u32).write_le(&mut writer).unwrap();
         let encoded = writer.into_inner();
-        return DataPayload::new(8, encoded.len() as u32, Arc::new(encoded));
+        return Self::new(8, Arc::new(encoded));
     }
 }
 

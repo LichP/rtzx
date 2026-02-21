@@ -64,7 +64,7 @@ impl SpectrumHeader {
     pub fn into_standard_speed_data_block(&self) -> StandardSpeedDataBlock {
         let mut ssdb = StandardSpeedDataBlock::new();
         ssdb.pause = 1000;
-        ssdb.data = Arc::new(self.encoded());
+        ssdb.payload = self.into();
         ssdb
     }
 
@@ -80,11 +80,10 @@ impl Default for SpectrumHeader {
     }
 }
 
-impl Into<DataPayload> for &SpectrumHeader {
-    fn into(self) -> DataPayload 
+impl From<&SpectrumHeader> for DataPayload {
+    fn from(value: &SpectrumHeader) -> Self
     {
-        let bytes = self.bytes();
-        DataPayload::new(8, bytes.len() as u32, Arc::new(bytes))
+        DataPayload::new(8, Arc::new(value.encoded()))
     }
 }
 
@@ -151,13 +150,19 @@ impl SpectrumData {
     pub fn into_standard_speed_data_block(&self) -> StandardSpeedDataBlock {
         let mut ssdb = StandardSpeedDataBlock::new();
         ssdb.pause = 2000;
-        ssdb.data = Arc::new(self.encoded());
+        ssdb.payload = self.into();
         ssdb
     }
 }
 
 impl Default for SpectrumData {
     fn default() -> Self { SpectrumData::new(Vec::new()) }
+}
+
+impl From<&SpectrumData> for DataPayload {
+    fn from(value: &SpectrumData) -> Self {
+        DataPayload::new(8, Arc::new(value.encoded()))
+    }
 }
 
 impl Payload for SpectrumData {
