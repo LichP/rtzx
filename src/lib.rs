@@ -32,7 +32,9 @@
 
 pub mod tzx;
 pub mod ui;
+pub mod u24;
 
+pub use crate::u24::U24;
 pub use crate::tzx::{
     Config,
     Platform,
