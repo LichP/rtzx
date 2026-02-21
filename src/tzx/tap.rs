@@ -302,10 +302,10 @@ impl BinWrite for TapData {
     }
 }
 
-impl Into<TzxData> for TapData {
-    fn into(self) -> TzxData {
-        let mut tzx_data = TzxData::default();
-        for tap_block in self.blocks {
+impl From<TapData> for TzxData {
+    fn from(value: TapData) -> Self {
+        let mut tzx_data = Self::default();
+        for tap_block in value.blocks {
             tzx_data.blocks.push(tap_block.into_block_box())
         }
         return tzx_data;
