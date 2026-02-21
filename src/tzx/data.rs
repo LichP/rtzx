@@ -12,6 +12,7 @@ use std::sync::{Arc, OnceLock};
 
 use crate::tzx::tap::{
     Payload,
+    PayloadError,
     read_payload,
 };
 
@@ -109,16 +110,17 @@ impl DataPayload {
         })
     }
 
-    /// Attempts to parse the data as a known payload type, such as a [CPCHeader] or [CPCData] payload.
+    /// Parses the data as a known payload type, such as a [CPCHeader] or [CPCData] payload.
     /// Returns `Some(Box<dyn Payload>)` if the data can be so parsed, and `None` if not.
-    pub fn read_payload(&self) -> Option<Box<dyn Payload>> {
+    pub fn as_payload(&self) -> Option<Box<dyn Payload>> {
         if self.len() == 0 { return None }
+        self.try_as_payload().ok()
+   }
 
+    /// Attempts to parse the data as a known payload type, such as a [CPCHeader] or [CPCData] payload.
+    pub fn try_as_payload(&self) -> Result<Box<dyn Payload>, PayloadError> {
         let reader = Cursor::new(&self.data[..]);
-
         read_payload(self.len(), false, reader)
-            .inspect_err(|e| eprintln!("Failed to parse payload: {:?}", e))
-            .ok()
     }
 
     /// Returns the total number of bits in the data, excluding unused bits in the last byte.
