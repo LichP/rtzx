@@ -201,7 +201,7 @@ impl GeneralizedDataBlock {
                 data.extend(&symbol_bits[(8 - self.symbols_pilot.len().ilog2() as usize)..8]);
             }
         }
-        DataPayload::new((8 - data.len() % self.symbols_pilot.len().ilog2() as usize) as u8, data.len() as u32, Arc::new(data.into_vec()))
+        DataPayload::new((8 - data.len() % self.symbols_pilot.len().ilog2() as usize) as u8, Arc::new(data.into_vec()))
     }
 }
 
@@ -223,7 +223,7 @@ impl Block for GeneralizedDataBlock {
         }
 
         let data_used_bits = 8 - (self.data.len() * 8).saturating_sub(self.symbols_data.len().ilog2() as usize * self.totd as usize) as u8;
-        let data_payload = DataPayload::new(data_used_bits, self.data.len() as u32, self.data.clone());
+        let data_payload = DataPayload::new(data_used_bits, self.data.clone());
         let data_source = GeneralizedWaveform::new(
             config.clone(),
             Arc::new(self.symbols_data.clone()),
