@@ -336,9 +336,7 @@ impl Iterator for KansasCityStandardDataWaveform {
         }
         let next_pulse = self.pulse_iterator.next();
         if next_pulse.is_some() {
-            let mut next_pulse = next_pulse.unwrap();
-            next_pulse.adjustment = self.current_pulse.adjustment;
-            self.current_pulse = next_pulse;
+            self.current_pulse = next_pulse.unwrap();
             self.current_pulse_sample_index = 0;
             return self.next();
         }
