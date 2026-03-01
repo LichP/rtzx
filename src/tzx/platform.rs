@@ -13,6 +13,8 @@ const T_CYCLE_LENGTH: f64 = 1.0 / 3500000.0;
 pub enum Platform {
     /// CDT files encode data for the Amstrad CPC.
     AmstradCPC,
+    /// TSX files encode data for the MSX platform.
+    MSX,
     /// TZX files encode data for the ZX Spectrum.
     #[default]
     ZXSpectrum,
@@ -29,6 +31,7 @@ impl Platform {
 
         match ext.as_str() {
             "cdt" => Some(Platform::AmstradCPC),
+            "tsx" => Some(Platform::MSX),
             "tzx" => Some(Platform::ZXSpectrum),
             _ => None,
         }
@@ -41,6 +44,7 @@ impl Platform {
     pub fn t_cycle_multiplier_record(&self) -> f64 {
         match self {
             Platform::AmstradCPC => 4.0 / 3.5,
+            Platform::MSX => 1.0,
             Platform::ZXSpectrum => 1.0,
         }
     }
