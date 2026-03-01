@@ -33,6 +33,7 @@ impl Commands {
 
     pub fn config(&self) -> Config {
         match self {
+            Commands::Inspect(args) => Config::builder().maybe_platform(Platform::from_path(args.file.file_name.clone())).build(),
             Commands::Play(args) => args.config.to_config(args.file.file_name.clone()),
             Commands::Convert(args) => args.config.to_config(args.file.file_name.clone()),
             _ => Config::builder().build(),

@@ -19,10 +19,10 @@ pub fn run_inspect(path: &Path, config: &Config, waveforms: bool, tape_data: &Ta
     let config = std::sync::Arc::new(config.clone());
 
     println!("{} file: {}", tape_data.file_type, path.display());
-    println!("Platform:  {:?}", config.platform);
+    println!("Platform: {:?}", config.platform);
 
     match tape_data.file_type {
-        TapeDataFileType::Cdt | TapeDataFileType::Tzx => {
+        TapeDataFileType::Cdt | TapeDataFileType::Tsx | TapeDataFileType::Tzx => {
             let tzx_data = tape_data.tzx_data.as_ref().expect("TZX data missing!");
             println!("Header:   {}", tzx_data.header);
             for (index, block) in tzx_data.blocks.iter().enumerate() {
