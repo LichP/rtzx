@@ -10,6 +10,7 @@ pub mod generalized_data_block;
 pub mod group;
 pub mod hardware_type;
 pub mod jump_to_block;
+pub mod kansas_city_standard_data_block;
 pub mod r#loop;
 pub mod pause_or_stop_tape_command;
 pub mod pulse_sequence;
@@ -32,6 +33,7 @@ pub use generalized_data_block::GeneralizedDataBlock;
 pub use group::{GroupStart, GroupEnd};
 pub use hardware_type::{HardwareTypeBlock, HardwareTypeBlockEntry};
 pub use jump_to_block::JumpToBlock;
+pub use kansas_city_standard_data_block::KansasCityStandardDataBlock;
 pub use r#loop::{LoopStart, LoopEnd};
 pub use pause_or_stop_tape_command::{PauseOrStopTapeCommand, StopTapeIf48K};
 pub use pulse_sequence::PulseSequence;
@@ -316,6 +318,7 @@ pub fn read_block(block_type: RecoveryEnum<BlockType, u8>, mut reader: impl Read
             BlockType::CustomInfoBlock => to_box_dyn(CustomInfoBlock::read(&mut reader)),
             BlockType::SnapshotBlock => to_box_dyn(SnapshotBlock::read(&mut reader)),
             BlockType::InstructionsBlock => to_box_dyn(InstructionsBlock::read(&mut reader)),
+            BlockType::KansasCityStandardDataBlock => to_box_dyn(KansasCityStandardDataBlock::read(&mut reader)).or_else(|_| to_box_dyn(UnsupportedBlockTypeBlock::read_args(&mut reader,(block_type_known,)))),
             BlockType::GlueBlock => to_box_dyn(GlueBlock::read(&mut reader)),
             BlockType::Undefined => to_box_dyn(UndefinedBlockTypeBlock::read_args(&mut reader,(0xff,))),
             _ => to_box_dyn(UnsupportedBlockTypeBlock::read_args(&mut reader,(block_type_known,))),

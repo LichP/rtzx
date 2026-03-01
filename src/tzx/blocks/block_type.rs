@@ -39,6 +39,7 @@ pub enum BlockType {
     CustomInfoBlock = 0x35,
     SnapshotBlock = 0x40,
     InstructionsBlock = 0x49,
+    KansasCityStandardDataBlock = 0x4b,
     GlueBlock = 0x5a,
     Undefined = 0xff,
 }
