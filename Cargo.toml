@@ -11,6 +11,7 @@ keywords = ["tzx", "cdt", "spectrum", "amstrad", "cpc"]
 categories = ["command-line-utilities", "parser-implementations"]
 
 [dependencies]
+bilge = "0.3.0"
 binrw = "0.15.0"
 bitvec = "1.0.1"
 bon = "3.8.1"
