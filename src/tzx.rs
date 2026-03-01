@@ -40,6 +40,7 @@ pub trait ExtendedDisplayCollector {
 pub enum TapeDataFileType {
     Cdt,
     Tap,
+    Tsx,
     #[default]
     Tzx,
 }
@@ -49,6 +50,7 @@ impl fmt::Display for TapeDataFileType {
         let type_string = match self {
             TapeDataFileType::Cdt => "cdt",
             TapeDataFileType::Tap => "tap",
+            TapeDataFileType::Tsx => "tsx",
             TapeDataFileType::Tzx => "tzx",
         };
         write!(f, "{}", type_string.to_uppercase())
@@ -60,6 +62,7 @@ impl From<&str> for TapeDataFileType {
         match extension {
             "cdt" => TapeDataFileType::Cdt,
             "tap" => TapeDataFileType::Tap,
+            "tsx" => TapeDataFileType::Tsx,
             "tzx" => TapeDataFileType::Tzx,
             _ => TapeDataFileType::Tzx,
         }
@@ -85,7 +88,7 @@ pub struct TapeDataFile {
 impl TapeDataFile {
     pub fn read_as<R: Read + Seek>(reader: &mut R, file_type: TapeDataFileType) -> BinResult<Self> {
         match file_type {
-            TapeDataFileType::Cdt | TapeDataFileType::Tzx => {
+            TapeDataFileType::Cdt | TapeDataFileType::Tsx | TapeDataFileType::Tzx => {
                 let tzx_data = TzxData::read(reader)?;
                 Ok(TapeDataFile { file_type, tzx_data: Some(tzx_data), tap_data: None })
             }
