@@ -2,11 +2,13 @@
 
 pub mod cpc;
 pub mod crc_reader;
+pub mod msx;
 pub mod spectrum;
 pub mod xor_reader_writer;
 
 pub use cpc::{CPCData, CPCHeader, CPCFlag};
 pub use crc_reader::CrcPagedRW;
+pub use msx::{MSXHeader, MSXFileType};
 pub use spectrum::{SpectrumData, SpectrumHeader, SpectrumFlag};
 pub use xor_reader_writer::{XorReader, XorWriter};
 
@@ -156,16 +158,35 @@ pub fn read_payload(length: usize, from_tap: bool, mut reader: impl Read + Seek)
         // if trailer != [0xFFu8; 4] { return None }
     }
 
+    // Attempt to parse as Spectrum payload
     if let Ok(spectrum_flag) = SpectrumFlag::try_from(flag_byte) {
         // Only attempt to parse if data length greater than two bytes (flag + checksum)
         if length < 3 {
-            return Err(PayloadError("Bad length".to_string()))
+            return Err(PayloadError("Spectrum payload: Bad length".to_string()))
         }
 
         return match spectrum_flag {
             SpectrumFlag::SpectrumHeader => { to_box_dyn(SpectrumHeader::read(&mut reader)) }
             SpectrumFlag::SpectrumData => { to_box_dyn(SpectrumData::read_args(&mut reader, (length - 2 as usize,))) }
         }
+    }
+
+    // Attempt to parse as MSX header payload
+    if let Ok(msx_file_type) = MSXFileType::try_from(flag_byte) {
+        // Only attempt to parse if the length is exactly 16 bytes
+        if length != 16 {
+            return Err(PayloadError("MSX header: Bad length".to_string()))
+        }
+
+        // Read and validate the 9 repeated bytes
+        let mut repeated = [0u8; 9];
+        reader.read_exact(&mut repeated)?;
+
+        if repeated.iter().any(|&b| b != flag_byte) {
+            return Err(PayloadError("MSX header: Type byte mismatch".to_string()))
+        }
+
+        return to_box_dyn(MSXHeader::read_args(&mut reader, (msx_file_type,)))
     }
 
     // No flag matched
