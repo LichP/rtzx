@@ -2,7 +2,7 @@
 name = "rtzx"
 version = "0.5.0"
 authors = ["Phil Stewart"]
-edition = "2024"
+edition = "2021"
 description = "TZX / CDT tape file parsing and conversion / playback"
 readme = "README.md"
 repository = "https://github.com/LichP/rtzx"

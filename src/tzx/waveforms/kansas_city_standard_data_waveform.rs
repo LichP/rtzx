@@ -406,9 +406,13 @@ impl Waveform for KansasCityStandardDataWaveform {
         let mut pulses: usize = 0;
         let mut pulse_iterator = self.pulse_iterator.clone();
 
-        while duration < target_duration && let Some(pulse) = pulse_iterator.next() {
-            duration += pulse.duration();
-            pulses += 1;
+        while duration < target_duration {
+            if let Some(pulse) = pulse_iterator.next() {
+                duration += pulse.duration();
+                pulses += 1;
+            } else {
+                break;
+            }
         }
 
         let avg_pulses_per_byte = self.pulse_iterator.bit_byte_config.start_stop_pulses_per_byte()

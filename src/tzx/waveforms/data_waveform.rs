@@ -178,9 +178,13 @@ impl Source for DataWaveform {
         self.pulse_iterator.current_pulse_index = estimated_byte_index * 16;
         self.current_pulse_sample_index = 0;
 
-        while pulse_samples > samples && let Some(prev_pulse) = self.pulse_iterator.prev() {
-            self.current_pulse = prev_pulse;
-            pulse_samples -= self.current_pulse.len() as usize;
+        while pulse_samples > samples {
+            if let Some(prev_pulse) = self.pulse_iterator.prev() {
+                self.current_pulse = prev_pulse;
+                pulse_samples -= self.current_pulse.len() as usize;
+            } else {
+                break;
+            }
         }
 
         while pulse_samples < samples {
@@ -210,9 +214,13 @@ impl Waveform for DataWaveform {
         let mut pulses: usize = 0;
         let mut pulse_iterator = self.pulse_iterator.clone();
 
-        while duration < target_duration && let Some(pulse) = pulse_iterator.next() {
-            duration += pulse.duration();
-            pulses += 1;
+        while duration < target_duration {
+            if let Some(pulse) = pulse_iterator.next() {
+                duration += pulse.duration();
+                pulses += 1;
+            } else {
+                break;
+            }
         }
         // Two pulses = one symbol / bit, so halve the pulse count to get baud.
         Some((pulses as f64 / duration.as_secs_f64()).round() as usize / 2)

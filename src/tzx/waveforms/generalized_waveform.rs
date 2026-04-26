@@ -290,11 +290,15 @@ impl Waveform for GeneralizedWaveform {
         let mut pulse_iterator = self.pulse_iterator.clone();
         let mut payload_bit_index = pulse_iterator.current_payload_bit_index;
 
-        while duration < target_duration && let Some(pulse) = pulse_iterator.next() {
-            duration += pulse.duration();
-            if payload_bit_index != pulse_iterator.current_payload_bit_index {
-                payload_bit_index = pulse_iterator.current_payload_bit_index;
-                symbols += 1;
+        while duration < target_duration {
+            if let Some(pulse) = pulse_iterator.next() {
+                duration += pulse.duration();
+                if payload_bit_index != pulse_iterator.current_payload_bit_index {
+                    payload_bit_index = pulse_iterator.current_payload_bit_index;
+                    symbols += 1;
+                }
+            } else {
+                break;
             }
         }
         Some((symbols as f64 / duration.as_secs_f64()).round() as usize)
